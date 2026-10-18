@@ -1,0 +1,139 @@
+buildscript {
+  // buildscript 块会先于脚本其余部分求值，因此这里不能复用下面定义的 getKotlinVersion()
+  def kotlin_version = rootProject.ext.has('kotlinVersion')
+      ? rootProject.ext.get('kotlinVersion')
+      : '1.9.24'
+
+  repositories {
+    google()
+    mavenCentral()
+  }
+
+  dependencies {
+    classpath 'com.android.tools.build:gradle:7.3.1'
+    classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+  }
+}
+
+def getKotlinVersion() {
+  return rootProject.ext.has('kotlinVersion')
+      ? rootProject.ext.get('kotlinVersion')
+      : '1.9.24'
+}
+
+def reactNativeArchitectures() {
+  def value = rootProject.getProperties().get("reactNativeArchitectures")
+  return value ? value.split(",") : ["armeabi-v7a", "x86", "x86_64", "arm64-v8a"]
+}
+
+apply plugin: "com.android.library"
+apply plugin: "kotlin-android"
+apply from: '../nitrogen/generated/android/NitroAliPush+autolinking.gradle'
+
+android {
+  namespace "com.margelo.nitro.alipush"
+  compileSdkVersion 34
+
+  defaultConfig {
+    minSdkVersion 21
+    targetSdkVersion 34
+    buildConfigField "boolean", "IS_NEW_ARCHITECTURE_ENABLED", "true"
+
+    externalNativeBuild {
+      cmake {
+        cppFlags "-frtti -fexceptions -Wall -Wextra -fstack-protector-all"
+        arguments "-DANDROID_STL=c++_shared"
+        abiFilters (*reactNativeArchitectures())
+      }
+    }
+  }
+
+  compileOptions {
+    sourceCompatibility JavaVersion.VERSION_17
+    targetCompatibility JavaVersion.VERSION_17
+  }
+
+  kotlinOptions {
+    jvmTarget = "17"
+  }
+
+  externalNativeBuild {
+    cmake {
+      path "CMakeLists.txt"
+    }
+  }
+
+  buildFeatures {
+    buildConfig true
+    prefab true
+  }
+
+  sourceSets {
+    main {
+      java.srcDirs += "src/main/java"
+    }
+  }
+
+  packagingOptions {
+    excludes = [
+      "META-INF",
+      "META-INF/**",
+      "**/libc++_shared.so",
+      "**/libfbjni.so",
+      "**/libjsi.so",
+      "**/libfolly_json.so",
+      "**/libfolly_runtime.so",
+      "**/libglog.so",
+      "**/libhermes.so",
+      "**/libhermes-executor-debug.so",
+      "**/libhermes_executor.so",
+      "**/libreactnative.so",
+      "**/libreactnativejni.so",
+      "**/libturbomodulejsijni.so",
+      "**/libreact_nativemodule_core.so",
+      "**/libjscexecutor.so"
+    ]
+  }
+
+  buildTypes {
+    release {
+      minifyEnabled false
+    }
+  }
+}
+
+repositories {
+  maven { url "https://maven.aliyun.com/repository/public" }
+  maven { url "https://maven.aliyun.com/repository/google" }
+  google()
+  mavenCentral()
+  maven { url 'https://developer.huawei.com/repo/' }
+  maven { url 'https://developer.hihonor.com/repo' }
+}
+
+dependencies {
+  // 新架构下使用 react-android（内含 Nitro / TurboModule 基础设施）。
+  implementation "com.facebook.react:react-android:+"
+
+  implementation "org.jetbrains.kotlin:kotlin-stdlib:${getKotlinVersion()}"
+
+  // 阿里云移动推送 SDK（含 CloudPush、自建通道与厂商通道依赖）。
+  api("com.aliyun.ams:alicloud-android-push:3.10.1") {
+    // 若宿主工程已引入以下依赖，可取消对应 exclude 注释避免重复。
+    // exclude(module: 'alicloud-android-utdid')
+    // exclude(module: 'alicloud-android-beacon')
+  }
+  api 'com.aliyun.ams:alicloud-android-third-push:3.10.1'
+  //华为依赖
+  api 'com.aliyun.ams:alicloud-android-third-push-huawei:3.10.1'
+  //小米依赖
+  api 'com.aliyun.ams:alicloud-android-third-push-xiaomi:3.10.1'
+  //OPPO依赖
+  api 'com.aliyun.ams:alicloud-android-third-push-oppo:3.10.1'
+  //vivo依赖
+  api 'com.aliyun.ams:alicloud-android-third-push-vivo:3.10.1'
+  //魅族依赖
+  api 'com.aliyun.ams:alicloud-android-third-push-meizu:3.10.1'
+  //荣耀
+  api 'com.aliyun.ams:alicloud-android-third-push-honor:3.10.1'
+}

@@ -1,0 +1,63 @@
+{
+  "name": "react-native-nitro-ali-push",
+  "version": "1.0.0",
+  "description": "React Native wrapper for Alibaba Cloud Push (阿里云移动推送), built with Nitro Modules (swift/kotlin HybridObject).",
+  "main": "lib/index.js",
+  "module": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "react-native": "src/index.ts",
+  "source": "src/index.ts",
+  "files": [
+    "src",
+    "lib",
+    "android",
+    "ios",
+    "nitrogen",
+    "*.podspec",
+    "!**/__tests__",
+    "!**/__fixtures__",
+    "!**/__mocks__"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint \"src/**/*.{js,ts,tsx}\"",
+    "build": "tsc -p tsconfig.build.json",
+    "codegen": "nitrogen",
+    "prepack": "npm run build"
+  },
+  "keywords": [
+    "react-native",
+    "ali-push",
+    "aliyun",
+    "alibaba",
+    "push",
+    "notification",
+    "nitro",
+    "nitro-modules"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hengkx/react-native-nitro-ali-push.git"
+  },
+  "homepage": "https://github.com/hengkx/react-native-nitro-ali-push",
+  "bugs": {
+    "url": "https://github.com/hengkx/react-native-nitro-ali-push/issues"
+  },
+  "license": "MIT",
+  "author": "hengkx <ycxzhkx@gmail.com>",
+  "engines": {
+    "node": ">= 18"
+  },
+  "peerDependencies": {
+    "react": "*",
+    "react-native": ">=0.76.0",
+    "react-native-nitro-modules": ">=0.37.0"
+  },
+  "devDependencies": {
+    "nitrogen": "0.37.1",
+    "react-native-nitro-modules": "0.37.1",
+    "@types/react": "^18.2.0",
+    "react": "18.2.0",
+    "typescript": "^5.4.0"
+  }
+}
