@@ -41,58 +41,83 @@ cd ios && pod install
 
 ## iOS 集成
 
-### 1. 引入 CloudPushSDK.framework
+### 1. 引入阿里云推送 SDK（`CloudPushSDK`）
 
-从 [阿里云移动推送控制台](https://push.console.aliyun.com/) 下载 iOS SDK（`CloudPushSDK.framework`），放入工程。
-推荐方式：放到本库 `ios/` 目录下，并在 `react-native-nitro-ali-push.podspec` 中取消注释 `s.vendored_frameworks`，或改为你自己的引入方式。
+**方式一：CocoaPods（默认，推荐）**
+
+阿里云推送的 pod 不在 CocoaPods trunk，而在官方自己的 spec 仓库，所以要先在 `ios/Podfile` **顶部**声明 source：
+
+```ruby
+source 'https://github.com/aliyun/aliyun-specs.git'
+source 'https://cdn.cocoapods.org/'
+```
+
+若本机还没添加过该仓库，先执行一次：
+
+```bash
+pod repo add AliyunRepo https://github.com/aliyun/aliyun-specs.git
+```
+
+本库 podspec 默认已声明 `s.dependency "AlicloudPush", "~> 3"`，因此无需再做其它配置，直接 `pod install` 即可。
+
+**方式二：手动集成**
+
+从 [阿里云移动推送控制台](https://push.console.aliyun.com/) 下载 iOS SDK，把 `CloudPushSDK.framework`（3.x 为 `CloudPushSDK.xcframework`）放到本库 `ios/` 目录下。
+podspec 检测到该文件后会自动改用 `vendored_frameworks`，不再依赖 `AlicloudPush`，无需修改 podspec。
+
+> 若 `pod install` 报 `Unable to find a specification for 'AlicloudPush'`，说明 Podfile 里缺少上面的阿里云 source。
 
 ### 2. AppDelegate 中初始化
 
 iOS 端的推送初始化必须在原生层完成（不能在 JS 中 `initPush`）：
 
-```objc
-#import "AppDelegate.h"
-#import <UserNotifications/UserNotifications.h>
-#import <CloudPushSDK/CloudPushSDK.h>
-#import <NitroAliPush/NitroAliPush-Swift.h>
+```swift
+import UIKit
+import UserNotifications
+// 本库模块名由 podspec 名 react-native-nitro-ali-push 推导为 react_native_nitro_ali_push。
+// HybridAliPushPlugin 是 public，跨模块使用需 import 本库模块（不在 NitroAliPush）。
+import react_native_nitro_ali_push
 
-@implementation AppDelegate
+@main
+class AppDelegate: UIResponder, UIApplicationDelegate {
 
-- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
-  // ... 其他初始化（RCTBridge 等）...
+  func application(_ application: UIApplication,
+                   didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+    // ... 其他初始化（RCTBridge 等）...
 
-  // 初始化阿里云推送
-  [HybridAliPushPlugin.shared setParams:@"<appKey>"
-                             appSecret:@"<appSecret>"
-                          lauchOptions:launchOptions
-         createNotificationCategoryHandler:^{ }];
+    // 初始化阿里云推送
+    HybridAliPushPlugin.shared().setParams(
+      "<appKey>",
+      appSecret: "<appSecret>",
+      lauchOptions: launchOptions as? [AnyHashable: Any],
+      createNotificationCategoryHandler: {}
+    )
 
-  return YES;
+    return true
+  }
+
+  // 注册 deviceToken
+  func application(_ application: UIApplication,
+                  didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+    HybridAliPushPlugin.shared().application(application,
+      didRegisterForRemoteNotificationsWithDeviceToken: deviceToken)
+  }
+
+  func application(_ application: UIApplication,
+                  didFailToRegisterForRemoteNotificationsWithError error: Error) {
+    HybridAliPushPlugin.shared().application(application,
+      didFailToRegisterForRemoteNotificationsWithError: error)
+  }
+
+  // 收到远程通知
+  func application(_ application: UIApplication,
+                  didReceiveRemoteNotification userInfo: [AnyHashable: Any],
+                  fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
+    HybridAliPushPlugin.shared().application(application,
+      didReceiveRemoteNotification: userInfo,
+      fetchCompletionHandler: completionHandler)
+  }
 }
-
-// 注册 deviceToken
-- (void)application:(UIApplication *)application
-    didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken {
-  [[HybridAliPushPlugin.shared application:application
-      didRegisterForRemoteNotificationsWithDeviceToken:deviceToken];
-}
-
-- (void)application:(UIApplication *)application
-    didFailToRegisterForRemoteNotificationsWithError:(NSError *)error {
-  [[HybridAliPushPlugin.shared application:application
-      didFailToRegisterForRemoteNotificationsWithError:error];
-}
-
-// 收到远程通知
-- (void)application:(UIApplication *)application
-    didReceiveRemoteNotification:(NSDictionary *)userInfo
-          fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler {
-  [[HybridAliPushPlugin.shared application:application
-                didReceiveRemoteNotification:userInfo
-                      fetchCompletionHandler:completionHandler];
-}
-
-@end
 ```
 
 > 若 CocoaPods 编译时提示找不到 `React` / `CloudPushSDK` 模块，请在 Podfile 中开启 `use_frameworks!` 或 `use_modular_headers!`。

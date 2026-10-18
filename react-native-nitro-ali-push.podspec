@@ -21,9 +21,21 @@ Pod::Spec.new do |s|
   load 'nitrogen/generated/ios/NitroAliPush+autolinking.rb'
   add_nitrogen_files(s)
 
-  # 阿里云推送 SDK（CloudPushSDK.framework）。
-  # 推荐方式：放到本库 ios/ 目录下，并取消下面注释；或改为你自己的引入方式。
-  # s.vendored_frameworks = 'ios/CloudPushSDK.framework'
+  # 阿里云推送 SDK（CloudPushSDK）。
+  #
+  # 默认：走官方 CocoaPods 源 `AlicloudPush`。它不在 CocoaPods trunk，而是阿里云自己的
+  # spec 仓库，因此使用方必须在 Podfile 中声明该 source（见 README「iOS 集成」）：
+  #   source 'https://github.com/aliyun/aliyun-specs.git'
+  #   source 'https://cdn.cocoapods.org/'
+  #
+  # 手动集成：把 CloudPushSDK.framework（或 CloudPushSDK.xcframework）放到本库 ios/ 目录，
+  # 这里会自动改为 vendored 方式，不再依赖 AlicloudPush，两者不会同时引入。
+  vendored = Dir.glob(File.join(__dir__, "ios", "CloudPushSDK.{framework,xcframework}"))
+  if vendored.empty?
+    s.dependency "AlicloudPush", "~> 3"
+  else
+    s.vendored_frameworks = vendored.map { |p| "ios/#{File.basename(p)}" }
+  end
 
   s.dependency "React-Core"
 end

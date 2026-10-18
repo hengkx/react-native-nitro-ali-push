@@ -25,8 +25,11 @@ private func DLog(_ message: String, file: String = #file, line: UInt = #line) {
  * iOS 端的推送初始化必须在原生层完成（AppDelegate 调用 `shared.setParams`），而不是
  * 从 JS 调用 `initPush`（该方法在 iOS 上为无操作）。
  */
+/// 必须 `public`：本库作为 pod 是独立模块，App 的 Swift/ObjC 需要引用它。
+/// 仅 `internal` 时不会写进 `<react_native_nitro_ali_push-Swift.h>`，App 端编译报
+/// "Use of undeclared identifier 'HybridAliPushPlugin'"。`@objc` 运行时名保持不变。
 @objc(HybridAliPushPlugin)
-class HybridAliPushPlugin: HybridAliPushPluginSpec, UNUserNotificationCenterDelegate {
+public final class HybridAliPushPlugin: HybridAliPushPluginSpec, UNUserNotificationCenterDelegate {
   /// 由 AppDelegate 创建的权威实例（持有 UNUserNotificationCenter 代理与 CloudPushSDK 回调）。
   private static var sharedInstance: HybridAliPushPlugin?
   /// JS 注册的监听器（静态池，AppDelegate 实例与 JS 实例共享）。
@@ -36,7 +39,7 @@ class HybridAliPushPlugin: HybridAliPushPluginSpec, UNUserNotificationCenterDele
 
   // MARK: - 单例（供 AppDelegate 使用）
 
-  @objc static func shared() -> HybridAliPushPlugin {
+  @objc public static func shared() -> HybridAliPushPlugin {
     if let instance = sharedInstance { return instance }
     let instance = HybridAliPushPlugin()
     sharedInstance = instance
@@ -51,7 +54,7 @@ class HybridAliPushPlugin: HybridAliPushPluginSpec, UNUserNotificationCenterDele
 
   // MARK: - 由原生 AppDelegate 调用完成 iOS 端推送初始化（不应从 JS 调用）
 
-  @objc func setParams(_ appKey: String,
+  @objc public func setParams(_ appKey: String,
                        appSecret: String,
                        lauchOptions: [AnyHashable: Any]?,
                        createNotificationCategoryHandler: @escaping () -> Void) {
@@ -95,7 +98,7 @@ class HybridAliPushPlugin: HybridAliPushPluginSpec, UNUserNotificationCenterDele
 
   // MARK: - AppDelegate 转发方法
 
-  @objc func application(_ application: UIApplication,
+  @objc public func application(_ application: UIApplication,
                           didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
     CloudPushSDK.registerDevice(deviceToken) { res in
       if res?.success ?? false {
@@ -106,12 +109,12 @@ class HybridAliPushPlugin: HybridAliPushPluginSpec, UNUserNotificationCenterDele
     }
   }
 
-  @objc func application(_ application: UIApplication,
+  @objc public func application(_ application: UIApplication,
                           didFailToRegisterForRemoteNotificationsWithError error: Error) {
     DLog("Get deviceToken failed, error: \(error.localizedDescription)")
   }
 
-  @objc func application(_ application: UIApplication,
+  @objc public func application(_ application: UIApplication,
                           didReceiveRemoteNotification userInfo: [AnyHashable: Any],
                           fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
     CloudPushSDK.sendNotificationAck(userInfo)
