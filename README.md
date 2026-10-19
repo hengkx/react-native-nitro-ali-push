@@ -219,6 +219,9 @@ await AliPush.unbindAccount();
 
 await AliPush.bindTag(1, ['news', 'sports'], null); // target: 1 设备 / 2 账号 / 3 别名
 await AliPush.unbindTag(1, ['news'], null);
+// alias 默认 null，可省略：
+await AliPush.bindTag(1, ['news', 'sports']);
+await AliPush.unbindTag(1, ['news']);
 
 await AliPush.addAlias('alias_001');
 await AliPush.removeAlias('alias_001');

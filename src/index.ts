@@ -96,7 +96,7 @@ export function unbindAccount(): Promise<void> {
 export function bindTag(
   target: AliPushTagTarget,
   tags: string[],
-  alias: string | null,
+  alias: string | null = null,
 ): Promise<void> {
   return AliPushNative.bindTag(target, tags, alias);
 }
@@ -112,7 +112,7 @@ export function bindTag(
 export function unbindTag(
   target: AliPushTagTarget,
   tags: string[],
-  alias: string | null,
+  alias: string | null = null,
 ): Promise<void> {
   return AliPushNative.unbindTag(target, tags, alias);
 }
