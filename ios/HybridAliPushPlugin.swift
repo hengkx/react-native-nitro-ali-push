@@ -10,7 +10,7 @@ import NitroModules
  * 本类只负责与 JS 桥接（`CloudPushSDK` 同步方法、`AliPushEventBus` 事件订阅、
  * `getInitialMessage` 冷启动消息回放）。所有需要 NSObject 的关注点
  * —— `@objc` 暴露给 AppDelegate、`UNUserNotificationCenterDelegate`、
- * selector-based 通知观察者 —— 已由 `ios/AliPushAppDelegate.swift` 承担。
+ * selector-based 通知观察者 —— 已由宿主工程的桥接类（参考本库历史 `ios/AliPushAppDelegate.swift`）承担。
  *
  * iOS 端的推送初始化必须在原生层完成（AppDelegate 调用
  * `AliPushAppDelegate.shared().setParams(...)`）。
