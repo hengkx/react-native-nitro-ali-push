@@ -13,7 +13,7 @@ public protocol HybridAliPushPluginSpec_protocol: HybridObject {
   
 
   // Methods
-  func initPush(appKey: String, appSecret: String) throws -> Promise<Void>
+  func initPush(appKey: String?, appSecret: String?) throws -> Promise<Void>
   func getDeviceId() throws -> Promise<String>
   func bindAccount(account: String) throws -> Promise<Void>
   func unbindAccount() throws -> Promise<Void>
@@ -22,7 +22,7 @@ public protocol HybridAliPushPluginSpec_protocol: HybridObject {
   func listTags(target: Double) throws -> Promise<[String]>
   func addAlias(alias: String) throws -> Promise<Void>
   func removeAlias(alias: String) throws -> Promise<Void>
-  func listAliases() throws -> Promise<String>
+  func listAliases() throws -> Promise<[String]>
   func setApplicationIconBadgeNumber(badge: Double) throws -> Promise<Void>
   func getApplicationIconBadgeNumber() throws -> Promise<Double>
   func getInitialMessage() throws -> Promise<Variant_NullType_AliPushMessage>

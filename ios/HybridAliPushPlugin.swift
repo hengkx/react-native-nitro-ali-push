@@ -312,10 +312,12 @@ public final class HybridAliPushPlugin: HybridAliPushPluginSpec, UNUserNotificat
 
   // MARK: - 暴露给 JS 的方法
 
-  public func initPush(appKey: String, appSecret: String) throws -> Promise<Void> {
+  public func initPush(appKey: String?, appSecret: String?) throws -> Promise<Void> {
     // iOS 端初始化在 AppDelegate 中完成，这里直接成功。
     return Promise.resolved()
   }
+
+
 
   public func getDeviceId() throws -> Promise<String> {
     return Promise.async {
@@ -462,12 +464,12 @@ public final class HybridAliPushPlugin: HybridAliPushPluginSpec, UNUserNotificat
     }
   }
 
-  public func listAliases() throws -> Promise<String> {
+  public func listAliases() throws -> Promise<[String]> {
     return Promise.async {
       try await withCheckedThrowingContinuation { continuation in
         CloudPushSDK.listAliases(withCallback: { res in
           if let res = res, res.success {
-            continuation.resume(returning: res.data as? String ?? "")
+            continuation.resume(returning: Self.splitCommaList(res.data as? String))
           } else {
             let err = res?.error
             continuation.resume(throwing: RuntimeError.error(

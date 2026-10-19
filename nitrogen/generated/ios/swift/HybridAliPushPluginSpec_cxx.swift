@@ -125,9 +125,23 @@ open class HybridAliPushPluginSpec_cxx {
 
   // Methods
   @inline(__always)
-  public final func initPush(appKey: std.string, appSecret: std.string) -> bridge.Result_std__shared_ptr_Promise_void___ {
+  public final func initPush(appKey: bridge.std__optional_std__string_, appSecret: bridge.std__optional_std__string_) -> bridge.Result_std__shared_ptr_Promise_void___ {
     do {
-      let __result = try self.__implementation.initPush(appKey: String(appKey), appSecret: String(appSecret))
+      let __result = try self.__implementation.initPush(appKey: { () -> String? in
+        if bridge.has_value_std__optional_std__string_(appKey) {
+          let __unwrapped = bridge.get_std__optional_std__string_(appKey)
+          return String(__unwrapped)
+        } else {
+          return nil
+        }
+      }(), appSecret: { () -> String? in
+        if bridge.has_value_std__optional_std__string_(appSecret) {
+          let __unwrapped = bridge.get_std__optional_std__string_(appSecret)
+          return String(__unwrapped)
+        } else {
+          return nil
+        }
+      }())
       let __resultCpp = { () -> bridge.std__shared_ptr_Promise_void__ in
         let __promise = bridge.create_std__shared_ptr_Promise_void__()
         let __promiseHolder = bridge.wrap_std__shared_ptr_Promise_void__(__promise)
@@ -340,21 +354,27 @@ open class HybridAliPushPluginSpec_cxx {
   }
   
   @inline(__always)
-  public final func listAliases() -> bridge.Result_std__shared_ptr_Promise_std__string___ {
+  public final func listAliases() -> bridge.Result_std__shared_ptr_Promise_std__vector_std__string____ {
     do {
       let __result = try self.__implementation.listAliases()
-      let __resultCpp = { () -> bridge.std__shared_ptr_Promise_std__string__ in
-        let __promise = bridge.create_std__shared_ptr_Promise_std__string__()
-        let __promiseHolder = bridge.wrap_std__shared_ptr_Promise_std__string__(__promise)
+      let __resultCpp = { () -> bridge.std__shared_ptr_Promise_std__vector_std__string___ in
+        let __promise = bridge.create_std__shared_ptr_Promise_std__vector_std__string___()
+        let __promiseHolder = bridge.wrap_std__shared_ptr_Promise_std__vector_std__string___(__promise)
         __result
-          .then({ __result in __promiseHolder.resolve(std.string(__result)) })
+          .then({ __result in __promiseHolder.resolve({ () -> bridge.std__vector_std__string_ in
+              var __vector = bridge.create_std__vector_std__string_(__result.count)
+              for __item in __result {
+                __vector.push_back(std.string(__item))
+              }
+              return __vector
+            }()) })
           .catch({ __error in __promiseHolder.reject(__error.toCpp()) })
         return __promise
       }()
-      return bridge.create_Result_std__shared_ptr_Promise_std__string___(__resultCpp)
+      return bridge.create_Result_std__shared_ptr_Promise_std__vector_std__string____(__resultCpp)
     } catch (let __error) {
       let __exceptionPtr = __error.toCpp()
-      return bridge.create_Result_std__shared_ptr_Promise_std__string___(__exceptionPtr)
+      return bridge.create_Result_std__shared_ptr_Promise_std__vector_std__string____(__exceptionPtr)
     }
   }
   

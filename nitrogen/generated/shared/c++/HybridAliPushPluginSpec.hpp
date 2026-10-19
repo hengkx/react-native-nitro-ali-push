@@ -18,10 +18,10 @@ namespace margelo::nitro::alipush { struct AliPushMessage; }
 
 #include <NitroModules/Promise.hpp>
 #include <string>
+#include <optional>
 #include <vector>
 #include <NitroModules/Null.hpp>
 #include <variant>
-#include <optional>
 #include "AliPushMessage.hpp"
 #include <functional>
 
@@ -56,7 +56,7 @@ namespace margelo::nitro::alipush {
 
     public:
       // Methods
-      virtual std::shared_ptr<Promise<void>> initPush(const std::string& appKey, const std::string& appSecret) = 0;
+      virtual std::shared_ptr<Promise<void>> initPush(const std::optional<std::string>& appKey, const std::optional<std::string>& appSecret) = 0;
       virtual std::shared_ptr<Promise<std::string>> getDeviceId() = 0;
       virtual std::shared_ptr<Promise<void>> bindAccount(const std::string& account) = 0;
       virtual std::shared_ptr<Promise<void>> unbindAccount() = 0;
@@ -65,7 +65,7 @@ namespace margelo::nitro::alipush {
       virtual std::shared_ptr<Promise<std::vector<std::string>>> listTags(double target) = 0;
       virtual std::shared_ptr<Promise<void>> addAlias(const std::string& alias) = 0;
       virtual std::shared_ptr<Promise<void>> removeAlias(const std::string& alias) = 0;
-      virtual std::shared_ptr<Promise<std::string>> listAliases() = 0;
+      virtual std::shared_ptr<Promise<std::vector<std::string>>> listAliases() = 0;
       virtual std::shared_ptr<Promise<void>> setApplicationIconBadgeNumber(double badge) = 0;
       virtual std::shared_ptr<Promise<double>> getApplicationIconBadgeNumber() = 0;
       virtual std::shared_ptr<Promise<std::variant<nitro::NullType, AliPushMessage>>> getInitialMessage() = 0;

@@ -66,34 +66,58 @@ class HybridAliPushPlugin : HybridAliPushPluginSpec() {
 
   // MARK: - 初始化 / 设备号
 
-  override fun initPush(appKey: String, appSecret: String): Promise<Unit> {
+  override fun initPush(appKey: String?, appSecret: String?): Promise<Unit> {
     return Promise.async {
       suspendCancellableCoroutine { cont ->
         try {
           val applicationContext = appContext()
-          PushServiceFactory.init(applicationContext)
-          PushServiceFactory.getCloudPushService()
-            .registerApp(
-              appKey,
-              appSecret,
-              object : CommonCallback {
-                override fun onSuccess(response: String?) {
-                  cont.resume(Unit)
-                }
+          if (appKey != null && appSecret != null) {
+            // 代码方式：带 appKey/appSecret 走 register(...)
+            PushServiceFactory.init(applicationContext)
+            PushServiceFactory.getCloudPushService()
+              .register(
+                applicationContext,
+                appKey,
+                appSecret,
+                object : CommonCallback {
+                  override fun onSuccess(response: String?) {
+                    cont.resume(Unit)
+                  }
 
-                override fun onFailed(errorCode: String?, errorMessage: String?) {
-                  cont.resumeWithException(
-                    RuntimeException("initPush failed: $errorCode $errorMessage")
-                  )
-                }
-              },
-            )
+                  override fun onFailed(errorCode: String?, errorMessage: String?) {
+                    cont.resumeWithException(
+                      RuntimeException("initPush failed: $errorCode $errorMessage")
+                    )
+                  }
+                },
+              )
+          } else {
+            // manifest 方式：SDK 从 AndroidManifest 读 com.alibaba.app.appkey/appsecret
+            PushServiceFactory.init(applicationContext)
+            PushServiceFactory.getCloudPushService()
+              .register(
+                applicationContext,
+                object : CommonCallback {
+                  override fun onSuccess(response: String?) {
+                    cont.resume(Unit)
+                  }
+
+                  override fun onFailed(errorCode: String?, errorMessage: String?) {
+                    cont.resumeWithException(
+                      RuntimeException("initPush failed: $errorCode $errorMessage")
+                    )
+                  }
+                },
+              )
+          }
         } catch (e: Throwable) {
           cont.resumeWithException(e)
         }
       }
     }
   }
+
+
 
   override fun getDeviceId(): Promise<String> {
     return Promise.parallel {
@@ -243,13 +267,13 @@ class HybridAliPushPlugin : HybridAliPushPluginSpec() {
     }
   }
 
-  override fun listAliases(): Promise<String> {
+  override fun listAliases(): Promise<Array<String>> {
     return Promise.async {
       suspendCancellableCoroutine { cont ->
         PushServiceFactory.getCloudPushService()
           .listAliases(
             object : CommonCallback {
-              override fun onSuccess(response: String?) = cont.resume(response ?: "")
+              override fun onSuccess(response: String?) = cont.resume(splitCommaList(response))
               override fun onFailed(code: String?, message: String?) =
                 cont.resumeWithException(RuntimeException("listAliases failed: $code $message"))
             },

@@ -36,9 +36,13 @@ export interface AliPushPlugin
    * 初始化阿里云推送。
    *
    * - **Android**：通过 `appKey` / `appSecret` 向阿里云推送服务注册应用。
+   *   两个参数都传 = 代码方式；都省略 = 使用 `AndroidManifest.xml` 中
+   *   `com.alibaba.app.appkey` / `com.alibaba.app.appsecret` meta-data。
    * - **iOS**：初始化在原生 `AppDelegate` 中完成（见 README），此方法为无操作。
    */
-  initPush(appKey: string, appSecret: string): Promise<void>;
+  initPush(appKey?: string, appSecret?: string): Promise<void>;
+
+
 
   /** 获取设备唯一标识 `deviceId`。 */
   getDeviceId(): Promise<string>;
@@ -80,8 +84,12 @@ export interface AliPushPlugin
   /** 移除别名。 */
   removeAlias(alias: string): Promise<void>;
 
-  /** 列出当前别名（返回服务端响应字符串）。 */
-  listAliases(): Promise<string>;
+  /**
+   * 列出当前别名。
+   *
+   * 服务端返回的是逗号拼接的字符串，各端会拆分为数组；无别名时返回空数组。
+   */
+  listAliases(): Promise<string[]>;
 
   /** 设置应用角标数字。 */
   setApplicationIconBadgeNumber(badge: number): Promise<void>;

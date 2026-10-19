@@ -54,7 +54,7 @@ namespace margelo::nitro::alipush {
 
   public:
     // Methods
-    std::shared_ptr<Promise<void>> initPush(const std::string& appKey, const std::string& appSecret) override;
+    std::shared_ptr<Promise<void>> initPush(const std::optional<std::string>& appKey, const std::optional<std::string>& appSecret) override;
     std::shared_ptr<Promise<std::string>> getDeviceId() override;
     std::shared_ptr<Promise<void>> bindAccount(const std::string& account) override;
     std::shared_ptr<Promise<void>> unbindAccount() override;
@@ -63,7 +63,7 @@ namespace margelo::nitro::alipush {
     std::shared_ptr<Promise<std::vector<std::string>>> listTags(double target) override;
     std::shared_ptr<Promise<void>> addAlias(const std::string& alias) override;
     std::shared_ptr<Promise<void>> removeAlias(const std::string& alias) override;
-    std::shared_ptr<Promise<std::string>> listAliases() override;
+    std::shared_ptr<Promise<std::vector<std::string>>> listAliases() override;
     std::shared_ptr<Promise<void>> setApplicationIconBadgeNumber(double badge) override;
     std::shared_ptr<Promise<double>> getApplicationIconBadgeNumber() override;
     std::shared_ptr<Promise<std::variant<nitro::NullType, AliPushMessage>>> getInitialMessage() override;

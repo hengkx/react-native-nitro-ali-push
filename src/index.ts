@@ -33,18 +33,30 @@ const AliPushNative = NitroModules.createHybridObject<AliPushPlugin>('AliPushPlu
  * **iOS**：推送初始化在原生 `AppDelegate` 中通过 `CloudPushSDK` 完成，此方法在
  * iOS 上为无操作。
  *
- * @param appKey - 阿里云推送控制台分配的 AppKey。
- * @param appSecret - 阿里云推送控制台分配的 AppSecret。
+ * @param appKey - 阿里云推送控制台分配的 AppKey。省略则走 manifest 配置方式。
+ * @param appSecret - 阿里云推送控制台分配的 AppSecret。省略则走 manifest 配置方式。
  * @returns 初始化完成的 Promise。
+ *
+ * @remarks
+ * Android 支持两种配置方式（对应官方 SDK「2.1 初始化」）：
+ * 1. **代码方式** —— 传入 `appKey` / `appSecret`；
+ * 2. **manifest 方式** —— 两个参数都省略，SDK 读取 `AndroidManifest.xml` 中的
+ *    `com.alibaba.app.appkey` / `com.alibaba.app.appsecret` meta-data。
  *
  * @example
  * ```ts
+ * // 代码方式
  * await AliPush.initPush('your_app_key', 'your_app_secret');
+ *
+ * // manifest 方式（AndroidManifest.xml 已配 appkey/appsecret）
+ * await AliPush.initPush();
  * ```
  */
-export function initPush(appKey: string, appSecret: string): Promise<void> {
+export function initPush(appKey?: string, appSecret?: string): Promise<void> {
   return AliPushNative.initPush(appKey, appSecret);
 }
+
+
 
 /**
  * 获取设备唯一标识 `deviceId`。
@@ -150,9 +162,9 @@ export function removeAlias(alias: string): Promise<void> {
 /**
  * 列出当前已添加的别名。
  *
- * @returns 解析为服务端响应字符串（含别名列表）的 Promise。
+ * @returns 解析为别名字符串数组的 Promise（服务端以逗号拼接，各端已拆分；无别名为空数组）。
  */
-export function listAliases(): Promise<string> {
+export function listAliases(): Promise<string[]> {
   return AliPushNative.listAliases();
 }
 

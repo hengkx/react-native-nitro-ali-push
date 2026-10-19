@@ -33,7 +33,7 @@ abstract class HybridAliPushPluginSpec: HybridObject() {
   // Methods
   @DoNotStrip
   @Keep
-  abstract fun initPush(appKey: String, appSecret: String): Promise<Unit>
+  abstract fun initPush(appKey: String?, appSecret: String?): Promise<Unit>
   
   @DoNotStrip
   @Keep
@@ -69,7 +69,7 @@ abstract class HybridAliPushPluginSpec: HybridObject() {
   
   @DoNotStrip
   @Keep
-  abstract fun listAliases(): Promise<String>
+  abstract fun listAliases(): Promise<Array<String>>
   
   @DoNotStrip
   @Keep
