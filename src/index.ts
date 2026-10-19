@@ -42,11 +42,11 @@ const AliPushNative = NitroModules.createHybridObject<AliPushPlugin>('AliPushPlu
  *
  * @example
  * ```ts
- * await AliPush.register();
+ * await AliPush.registerPush();
  * ```
  */
-export function register(): Promise<void> {
-  return AliPushNative.register();
+export function registerPush(): Promise<void> {
+  return AliPushNative.registerPush();
 }
 
 /**
@@ -261,7 +261,7 @@ export function removeEventListener(unsubscribe: () => void): void {
  * @public
  */
 const AliPush = {
-  register,
+  registerPush,
   getDeviceId,
   bindAccount,
   unbindAccount,

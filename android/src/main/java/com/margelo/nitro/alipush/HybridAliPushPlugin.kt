@@ -73,7 +73,7 @@ class HybridAliPushPlugin : HybridAliPushPluginSpec() {
 
   // MARK: - 初始化 / 设备号
 
-  override fun register(): Promise<Unit> {
+  override fun registerPush(): Promise<Unit> {
     return Promise.async {
       suspendCancellableCoroutine { cont ->
         try {

@@ -13,7 +13,7 @@ public protocol HybridAliPushPluginSpec_protocol: HybridObject {
   
 
   // Methods
-  func register() throws -> Promise<Void>
+  func registerPush() throws -> Promise<Void>
   func getDeviceId() throws -> Promise<String>
   func bindAccount(account: String) throws -> Promise<Void>
   func unbindAccount() throws -> Promise<Void>

@@ -48,7 +48,7 @@ export interface AliPushPlugin
    *   本方法会采集设备标识，**请在用户同意隐私后调用**。
    * - **iOS**：无操作（iOS 端初始化在原生 `AppDelegate` 中通过 `setParams` 完成）。
    */
-  register(): Promise<void>;
+  registerPush(): Promise<void>;
 
   /** 获取设备唯一标识 `deviceId`。 */
   getDeviceId(): Promise<string>;

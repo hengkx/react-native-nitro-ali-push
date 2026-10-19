@@ -18,7 +18,7 @@ import NitroModules
 final class HybridAliPushPlugin: HybridAliPushPluginSpec {
   // MARK: - 暴露给 JS 的方法
 
-  func register() throws -> Promise<Void> {
+  func registerPush() throws -> Promise<Void> {
     // iOS 端初始化与注册都在 AppDelegate 中通过 AliPushAppDelegate.setParams 完成。
     return Promise.resolved()
   }

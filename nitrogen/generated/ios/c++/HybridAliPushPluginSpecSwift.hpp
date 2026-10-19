@@ -81,8 +81,8 @@ namespace margelo::nitro::alipush {
 
   public:
     // Methods
-    inline std::shared_ptr<Promise<void>> register() override {
-      auto __result = _swiftPart.register();
+    inline std::shared_ptr<Promise<void>> registerPush() override {
+      auto __result = _swiftPart.registerPush();
       if (__result.hasError()) [[unlikely]] {
         std::rethrow_exception(__result.error());
       }

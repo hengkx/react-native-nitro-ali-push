@@ -72,8 +72,8 @@ namespace margelo::nitro::alipush {
   
 
   // Methods
-  std::shared_ptr<Promise<void>> JHybridAliPushPluginSpec::register() {
-    static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<JPromise::javaobject>()>("register");
+  std::shared_ptr<Promise<void>> JHybridAliPushPluginSpec::registerPush() {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<JPromise::javaobject>()>("registerPush");
     auto __result = method(_javaPart);
     return [&]() {
       auto __promise = Promise<void>::create();
