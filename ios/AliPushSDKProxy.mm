@@ -22,13 +22,13 @@
 }
 
 - (void)bindAccount:(NSString *)account completion:(AliPushSimpleCallback)completion {
-  [CloudPushSDK bindAccount:account withCallback:^(CCPSysMessage *res) {
+  [CloudPushSDK bindAccount:account withCallback:^(CloudPushCallbackResult *res) {
     completion(res.success, res.error.localizedDescription);
   }];
 }
 
 - (void)unbindAccountWithCompletion:(AliPushSimpleCallback)completion {
-  [CloudPushSDK unbindAccount:^(CCPSysMessage *res) {
+  [CloudPushSDK unbindAccount:^(CloudPushCallbackResult *res) {
     completion(res.success, res.error.localizedDescription);
   }];
 }
@@ -37,7 +37,7 @@
            tags:(NSArray<NSString *> *)tags
           alias:(nullable NSString *)alias
      completion:(AliPushSimpleCallback)completion {
-  [CloudPushSDK bindTag:target withTags:tags withAlias:alias withCallback:^(CCPSysMessage *res) {
+  [CloudPushSDK bindTag:target withTags:tags withAlias:alias withCallback:^(CloudPushCallbackResult *res) {
     completion(res.success, res.error.localizedDescription);
   }];
 }
@@ -46,39 +46,39 @@
              tags:(NSArray<NSString *> *)tags
             alias:(nullable NSString *)alias
        completion:(AliPushSimpleCallback)completion {
-  [CloudPushSDK unbindTag:target withTags:tags withAlias:alias withCallback:^(CCPSysMessage *res) {
+  [CloudPushSDK unbindTag:target withTags:tags withAlias:alias withCallback:^(CloudPushCallbackResult *res) {
     completion(res.success, res.error.localizedDescription);
   }];
 }
 
 - (void)listTags:(int32_t)target completion:(AliPushDataCallback)completion {
-  [CloudPushSDK listTags:target withCallback:^(CCPSysMessage *res) {
+  [CloudPushSDK listTags:target withCallback:^(CloudPushCallbackResult *res) {
     NSString *dataStr = [res.data isKindOfClass:[NSString class]] ? (NSString *)res.data : nil;
     completion(res.success, res.error.localizedDescription, dataStr);
   }];
 }
 
 - (void)addAlias:(NSString *)alias completion:(AliPushSimpleCallback)completion {
-  [CloudPushSDK addAlias:alias withCallback:^(CCPSysMessage *res) {
+  [CloudPushSDK addAlias:alias withCallback:^(CloudPushCallbackResult *res) {
     completion(res.success, res.error.localizedDescription);
   }];
 }
 
 - (void)removeAlias:(NSString *)alias completion:(AliPushSimpleCallback)completion {
-  [CloudPushSDK removeAlias:alias withCallback:^(CCPSysMessage *res) {
+  [CloudPushSDK removeAlias:alias withCallback:^(CloudPushCallbackResult *res) {
     completion(res.success, res.error.localizedDescription);
   }];
 }
 
 - (void)listAliasesWithCompletion:(AliPushDataCallback)completion {
-  [CloudPushSDK listAliases:^(CCPSysMessage *res) {
+  [CloudPushSDK listAliases:^(CloudPushCallbackResult *res) {
     NSString *dataStr = [res.data isKindOfClass:[NSString class]] ? (NSString *)res.data : nil;
     completion(res.success, res.error.localizedDescription, dataStr);
   }];
 }
 
 - (void)syncBadgeNum:(NSUInteger)badge completion:(AliPushSimpleCallback)completion {
-  [CloudPushSDK syncBadgeNum:badge withCallback:^(CCPSysMessage *res) {
+  [CloudPushSDK syncBadgeNum:badge withCallback:^(CloudPushCallbackResult *res) {
     completion(res.success, res.error.localizedDescription);
   }];
 }

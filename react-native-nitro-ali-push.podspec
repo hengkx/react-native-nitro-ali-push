@@ -32,13 +32,19 @@ Pod::Spec.new do |s|
   add_nitrogen_files(s)
 
   # C++ 互操作桥接层会 #include <NitroModules/...>，其内部引用 <cstddef> 等 libc++ 头文件。
-  # 部分 Xcode/SDK 组合下 clang 不会自动把 $(SDKROOT)/usr/include/c++/v1 加入搜索路径，
-  # 导致编译报 "cstddef file not found"。显式补上。
+  # 部分 Xcode/SDK 组合（如 Xcode 27.1 + 新版 libc++）下有两层问题：
+  # 1) clang 不会自动把 $(SDKROOT)/usr/include/c++/v1 加入搜索路径 → "cstddef file not found"，显式补上；
+  # 2) 即便能找到，Swift 的 C++ 互操作子编译在构建 libc++ 的 `std` 模块时会失败
+  #    （SDK 27.1 的 std_config / std_core 是同级的顶层 module，std_core 拿不到 __config 的宏定义，
+  #    报 `unknown type name '_LIBCPP_BEGIN_NAMESPACE_STD'` / `could not build module 'std'`）。
+  #    这里关闭 Swift 的 C++ 标准库「模块化」（SWIFT_USE_STDLIB_MODULE=NO），
+  #    让 <cstddef> 等以文本方式包含，绕过 `std` 模块构建；不会影响 Swift 自身的 SwiftShims 等模块。
   # 注意：本机 CocoaPods 版本的 spec 没有 `pod_target_xcconfig` 读取访问器，
   # 需经由 attributes_hash 读取（与上方 add_nitrogen_files 同款写法）。
   current_xcconfig = s.attributes_hash['pod_target_xcconfig'] || {}
   s.pod_target_xcconfig = current_xcconfig.merge(
-    "HEADER_SEARCH_PATHS" => "$(inherited) \"$(SDKROOT)/usr/include/c++/v1\""
+    "HEADER_SEARCH_PATHS" => "$(inherited) \"$(SDKROOT)/usr/include/c++/v1\"",
+    "SWIFT_USE_STDLIB_MODULE" => "NO"
   )
 
   # 阿里云推送 SDK（CloudPushSDK）。
