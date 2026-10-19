@@ -3,8 +3,9 @@
 阿里云移动推送（Alibaba Cloud Push）的 React Native 封装，基于 **Nitro Modules** 实现：
 
 - iOS 原生端：**Swift**。Nitro 生成的 `HybridAliPushPluginSpec` 由 `HybridAliPushPlugin` 实现（纯 Swift，只对 JS）；
-  需要 NSObject 的 AppDelegate 集成（`@objc` 单例 / `UNUserNotificationCenterDelegate`）由独立的
-  `AliPushAppDelegate` 承担，两者通过 `AliPushEventBus` 单向解耦，codegen 不会覆盖手写代码
+  需要 NSObject 的 AppDelegate 集成（`@objc` 单例 / `UNUserNotificationCenterDelegate`）**不放在本库**，
+  而是由**宿主工程**自行实现一个桥接类（参考 `ios/AliPushAppDelegate.swift` 的历史版本），只负责
+  「原生事件 → `AliPushEventBus.emit`」，两者通过 `AliPushEventBus` 单向解耦。原因见下「iOS 集成」。
 - Android 原生端：**Kotlin**（`HybridAliPushPlugin` 继承 Nitro 生成的 `HybridAliPushPluginSpec`）
 - 原生桥接层由 `nitrogen` 代码生成器生成，无需手写 C++ / JNI / Objective-C
 - 推送事件通过 Nitro 回调（`addListener` 返回退订闭包）直接派发，不再依赖 `NativeEventEmitter`
@@ -69,16 +70,27 @@ podspec 检测到该文件后会自动改用 `vendored_frameworks`，不再依�
 
 > 若 `pod install` 报 `Unable to find a specification for 'AlicloudPush'`，说明 Podfile 里缺少上面的阿里云 source。
 
-### 2. AppDelegate 中初始化
+### 2. AppDelegate 中初始化（宿主自行集成）
 
-iOS 端的推送初始化必须在原生层完成（`register()` 在 iOS 上是无操作）：
+iOS 端的推送初始化必须在原生层完成（`register()` 在 iOS 上是无操作）。
+
+> **`AliPushAppDelegate` 不在本库内。** 它曾位于 `ios/AliPushAppDelegate.swift`，但已迁出到
+> **宿主工程**：Nitro 的 codegen 会把整个库 module 的 Swift 声明（含协议遵守）写进
+> `NitroAliPush-Swift.h`，再被 **C++ 桥接层** `#import` 编译。而 C++ 编译上下文下
+> `@import UserNotifications` 会被跳过，导致 `UNUserNotificationCenterDelegate` 协议无法解析
+> —— 任何带系统框架协议的类型（AppDelegate / APNs 代理）留在库里都会编译失败。因此这些「脏」
+> 的桥接类必须住在宿主 app target，只通过本库 **`public`** 的 `AliPushEventBus` 把事件甩回库的
+> `HybridAliPushPlugin`。`AliPushEventBus` / `AliPushInternal` 因此必须是 `public`（跨 module 可见），
+> 而 `HybridAliPushPlugin` 自身是纯 Swift、不含系统框架协议，留在库里安全。
+>
+> 宿主按下面模板（从本库历史 `ios/AliPushAppDelegate.swift` 复制）自行实现即可，无需依赖库内文件。
 
 ```swift
 import UIKit
 import UserNotifications
 // 本库 Swift 模块名由 podspec 的 `module_name` 决定（见 react-native-nitro-ali-push.podspec），
 // 与 nitro.json 的 `iosModuleName`（NitroAliPush）保持一致，以便生成 NitroAliPush-Swift.h
-// 供 C++ 桥接使用。AliPushAppDelegate 是 public，跨模块使用需 import 本库模块。
+// 供 C++ 桥接使用。AliPushEventBus 是 public，跨模块使用需 import 本库模块。
 import NitroAliPush
 
 @main
@@ -123,7 +135,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 }
 ```
 
-> `AliPushAppDelegate` 是本库为 iOS 提供的 AppDelegate 集成桥（独立 NSObject 类，同时充当
+> `AliPushAppDelegate` 是宿主工程内的桥接类（独立 NSObject 类，同时充当
 > `UNUserNotificationCenterDelegate`）。它与 Nitro 的 `HybridAliPushPlugin` 分离，因此重新
 > 执行 `nitrogen` codegen 不会影响 AppDelegate 的集成代码。
 
