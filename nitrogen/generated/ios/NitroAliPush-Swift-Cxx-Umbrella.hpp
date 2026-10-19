@@ -22,7 +22,6 @@ namespace margelo::nitro::alipush { class HybridAliPushPluginSpec; }
 #include "AliPushMessage.hpp"
 #include "AliPushMessageType.hpp"
 #include "HybridAliPushPluginSpec.hpp"
-#include <NitroModules/AnyMap.hpp>
 #include <NitroModules/Null.hpp>
 #include <NitroModules/Promise.hpp>
 #include <NitroModules/Result.hpp>

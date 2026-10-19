@@ -5,7 +5,7 @@ import android.os.Bundle
 import android.util.Log
 import com.alibaba.sdk.android.push.MessageReceiver
 import com.alibaba.sdk.android.push.notification.CPushMessage
-import com.margelo.nitro.core.AnyMap
+import org.json.JSONObject
 
 /**
  * 阿里云推送广播接收器。
@@ -40,18 +40,18 @@ class AliPushMessageReceiver : MessageReceiver() {
 
   override fun onMessage(context: Context?, intent: android.content.Intent?) {
     val message = intent?.getSerializableExtra("message") as? CPushMessage
-    val extras = AnyMap()
+    val obj = JSONObject()
     message?.let {
-      extras.setString("appId", it.appId ?: "")
-      extras.setString("messageId", it.messageId ?: "")
+      obj.put("appId", it.appId ?: "")
+      obj.put("messageId", it.messageId ?: "")
     }
-    intent?.extras?.let { putBundle(extras, it) }
+    intent?.extras?.let { putBundle(obj, it) }
     val payload = AliPushMessage(
       title = message?.title,
       subtitle = null,
       body = message?.content,
       badge = null,
-      extras = extras,
+      extras = obj.toString(),
       type = AliPushMessageType.MESSAGE,
       actionIdentifier = null,
       appState = null,
@@ -81,14 +81,14 @@ class AliPushMessageReceiver : MessageReceiver() {
   }
 
   override fun onNotificationRemoved(context: Context?, messageId: String?) {
-    val extras = AnyMap()
-    if (messageId != null) extras.setString("messageId", messageId)
+    val obj = JSONObject()
+    if (messageId != null) obj.put("messageId", messageId)
     val message = AliPushMessage(
       title = null,
       subtitle = null,
       body = null,
       badge = null,
-      extras = extras,
+      extras = obj.toString(),
       type = AliPushMessageType.NOTIFICATION,
       actionIdentifier = "removed",
       appState = null,
@@ -105,23 +105,26 @@ class AliPushMessageReceiver : MessageReceiver() {
   // 内部工具
   // ---------------------------------------------------------------------------
 
-  private fun buildExtras(extraMap: Map<String, String>?): AnyMap? {
+  /** 阿里云推送的 extraMap 是 `Map<String, String>`，直接序列化为 JSON 字符串。 */
+  private fun buildExtras(extraMap: Map<String, String>?): String? {
     if (extraMap.isNullOrEmpty()) return null
-    val map = AnyMap()
+    val obj = JSONObject()
     for ((k, v) in extraMap) {
-      map.setString(k, v)
+      obj.put(k, v)
     }
-    return map
+    return obj.toString()
   }
 
-  private fun putBundle(target: AnyMap, bundle: Bundle) {
+  /** 把 `Bundle`（第三方通道点击通知的数据）中的基本类型写入 JSON 对象。 */
+  private fun putBundle(target: JSONObject, bundle: Bundle) {
     bundle.keySet()?.forEach { key ->
       when (val value = bundle.get(key)) {
-        is String -> target.setString(key, value)
-        is Double -> target.setDouble(key, value)
-        is Int -> target.setDouble(key, value.toDouble())
-        is Boolean -> target.setBoolean(key, value)
-        is Long -> target.setInt64(key, value)
+        is String -> target.put(key, value)
+        is Double -> target.put(key, value)
+        is Int -> target.put(key, value)
+        is Boolean -> target.put(key, value)
+        is Long -> target.put(key, value)
+        else -> target.put(key, value?.toString() ?: JSONObject.NULL)
       }
     }
   }
@@ -135,16 +138,16 @@ class AliPushMessageReceiver : MessageReceiver() {
       if (extras == null) return
       val title = extras.getString("title")
       val body = extras.getString("body") ?: extras.getString("summary")
-      val e = AnyMap()
+      val obj = JSONObject()
       extras.keySet()?.forEach { key ->
-        (extras.get(key) as? String)?.let { e.setString(key, it) }
+        (extras.get(key) as? String)?.let { obj.put(key, it) }
       }
       val message = AliPushMessage(
         title = title,
         subtitle = null,
         body = body,
         badge = null,
-        extras = e,
+        extras = obj.toString(),
         type = AliPushMessageType.NOTIFICATION,
         actionIdentifier = "opened",
         appState = null,

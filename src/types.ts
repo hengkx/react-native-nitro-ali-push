@@ -6,7 +6,6 @@
  *
  * @packageDocumentation
  */
-import { type AnyMap } from 'react-native-nitro-modules';
 
 /**
  * 消息类型。
@@ -52,12 +51,15 @@ export interface AliPushMessage {
   /** 角标数字。 */
   badge?: number;
   /**
-   * 自定义键值对。
+   * 自定义键值对的 JSON 字符串。
    *
-   * 即推送后台设置的 `extras` / 业务参数，键为字符串，值可为字符串、数字、
-   * 布尔或嵌套结构（经 Nitro 的 {@link AnyMap} 跨语言封送）。
+   * 即推送后台设置的 `extras` / 业务参数，原生端已序列化为 JSON 字符串，
+   * JS 侧用 `JSON.parse(msg.extras)` 还原为对象。改为字符串是为了避免
+   * Nitro 的 `AnyMap` 跨语言类型（该类型会向生成的 C++ 头注入
+   * `<NitroModules/NitroHash.hpp>`，进而需要 libc++ 的 `<cstddef>`，在部分
+   * Xcode / SDK 组合下 App 主工程的 C++ 互操作子编译找不到该头文件）。
    */
-  extras?: AnyMap;
+  extras?: string;
   /**
    * 消息类型：
    *

@@ -18,7 +18,7 @@ public extension AliPushMessage {
   /**
    * Create a new instance of `AliPushMessage`.
    */
-  init(title: String?, subtitle: String?, body: String?, badge: Double?, extras: AnyMap?, type: AliPushMessageType?, actionIdentifier: String?, appState: AliPushAppState?, date: Variant_Double_String?) {
+  init(title: String?, subtitle: String?, body: String?, badge: Double?, extras: String?, type: AliPushMessageType?, actionIdentifier: String?, appState: AliPushAppState?, date: Variant_Double_String?) {
     self.init({ () -> bridge.std__optional_std__string_ in
       if let __unwrappedValue = title {
         return bridge.create_std__optional_std__string_(std.string(__unwrappedValue))
@@ -43,9 +43,9 @@ public extension AliPushMessage {
       } else {
         return .init()
       }
-    }(), { () -> bridge.std__optional_std__shared_ptr_AnyMap__ in
+    }(), { () -> bridge.std__optional_std__string_ in
       if let __unwrappedValue = extras {
-        return bridge.create_std__optional_std__shared_ptr_AnyMap__(__unwrappedValue.cppPart)
+        return bridge.create_std__optional_std__string_(std.string(__unwrappedValue))
       } else {
         return .init()
       }
@@ -132,11 +132,11 @@ public extension AliPushMessage {
   }
   
   @inline(__always)
-  var extras: AnyMap? {
-    return { () -> AnyMap? in
-      if bridge.has_value_std__optional_std__shared_ptr_AnyMap__(self.__extras) {
-        let __unwrapped = bridge.get_std__optional_std__shared_ptr_AnyMap__(self.__extras)
-        return AnyMap(withCppPart: __unwrapped)
+  var extras: String? {
+    return { () -> String? in
+      if bridge.has_value_std__optional_std__string_(self.__extras) {
+        let __unwrapped = bridge.get_std__optional_std__string_(self.__extras)
+        return String(__unwrapped)
       } else {
         return nil
       }

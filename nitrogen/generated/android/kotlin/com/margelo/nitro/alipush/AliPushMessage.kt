@@ -10,7 +10,7 @@ package com.margelo.nitro.alipush
 import androidx.annotation.Keep
 import com.facebook.proguard.annotations.DoNotStrip
 import java.util.Objects
-import com.margelo.nitro.core.AnyMap
+
 
 /**
  * Represents the JavaScript object/struct "AliPushMessage".
@@ -32,7 +32,7 @@ data class AliPushMessage(
   val badge: Double?,
   @DoNotStrip
   @Keep
-  val extras: AnyMap?,
+  val extras: String?,
   @DoNotStrip
   @Keep
   val type: AliPushMessageType?,
@@ -84,7 +84,7 @@ data class AliPushMessage(
     @Keep
     @Suppress("unused")
     @JvmStatic
-    private fun fromCpp(title: String?, subtitle: String?, body: String?, badge: Double?, extras: AnyMap?, type: AliPushMessageType?, actionIdentifier: String?, appState: AliPushAppState?, date: Variant_Double_String?): AliPushMessage {
+    private fun fromCpp(title: String?, subtitle: String?, body: String?, badge: Double?, extras: String?, type: AliPushMessageType?, actionIdentifier: String?, appState: AliPushAppState?, date: Variant_Double_String?): AliPushMessage {
       return AliPushMessage(title, subtitle, body, badge, extras, type, actionIdentifier, appState, date)
     }
   }

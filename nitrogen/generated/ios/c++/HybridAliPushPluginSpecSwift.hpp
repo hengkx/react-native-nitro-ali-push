@@ -26,7 +26,6 @@ namespace margelo::nitro::alipush { enum class AliPushAppState; }
 #include <variant>
 #include <optional>
 #include "AliPushMessage.hpp"
-#include <NitroModules/AnyMap.hpp>
 #include "AliPushMessageType.hpp"
 #include "AliPushAppState.hpp"
 #include <functional>

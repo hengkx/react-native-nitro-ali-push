@@ -10,7 +10,7 @@
  *
  * @packageDocumentation
  */
-import { type HybridObject, type AnyMap } from 'react-native-nitro-modules';
+import { type HybridObject } from 'react-native-nitro-modules';
 
 import type { AliPushMessage } from '../types';
 

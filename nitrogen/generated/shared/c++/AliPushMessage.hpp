@@ -35,7 +35,6 @@ namespace margelo::nitro::alipush { enum class AliPushAppState; }
 
 #include <string>
 #include <optional>
-#include <NitroModules/AnyMap.hpp>
 #include "AliPushMessageType.hpp"
 #include "AliPushAppState.hpp"
 #include <variant>
@@ -51,7 +50,7 @@ namespace margelo::nitro::alipush {
     std::optional<std::string> subtitle     SWIFT_PRIVATE;
     std::optional<std::string> body     SWIFT_PRIVATE;
     std::optional<double> badge     SWIFT_PRIVATE;
-    std::optional<std::shared_ptr<AnyMap>> extras     SWIFT_PRIVATE;
+    std::optional<std::string> extras     SWIFT_PRIVATE;
     std::optional<AliPushMessageType> type     SWIFT_PRIVATE;
     std::optional<std::string> actionIdentifier     SWIFT_PRIVATE;
     std::optional<AliPushAppState> appState     SWIFT_PRIVATE;
@@ -59,7 +58,7 @@ namespace margelo::nitro::alipush {
 
   public:
     AliPushMessage() = default;
-    explicit AliPushMessage(std::optional<std::string> title, std::optional<std::string> subtitle, std::optional<std::string> body, std::optional<double> badge, std::optional<std::shared_ptr<AnyMap>> extras, std::optional<AliPushMessageType> type, std::optional<std::string> actionIdentifier, std::optional<AliPushAppState> appState, std::optional<std::variant<double, std::string>> date): title(title), subtitle(subtitle), body(body), badge(badge), extras(extras), type(type), actionIdentifier(actionIdentifier), appState(appState), date(date) {}
+    explicit AliPushMessage(std::optional<std::string> title, std::optional<std::string> subtitle, std::optional<std::string> body, std::optional<double> badge, std::optional<std::string> extras, std::optional<AliPushMessageType> type, std::optional<std::string> actionIdentifier, std::optional<AliPushAppState> appState, std::optional<std::variant<double, std::string>> date): title(title), subtitle(subtitle), body(body), badge(badge), extras(extras), type(type), actionIdentifier(actionIdentifier), appState(appState), date(date) {}
 
   public:
     friend bool operator==(const AliPushMessage& lhs, const AliPushMessage& rhs) = default;
@@ -79,7 +78,7 @@ namespace margelo::nitro {
         JSIConverter<std::optional<std::string>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "subtitle"))),
         JSIConverter<std::optional<std::string>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "body"))),
         JSIConverter<std::optional<double>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "badge"))),
-        JSIConverter<std::optional<std::shared_ptr<AnyMap>>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "extras"))),
+        JSIConverter<std::optional<std::string>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "extras"))),
         JSIConverter<std::optional<margelo::nitro::alipush::AliPushMessageType>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "type"))),
         JSIConverter<std::optional<std::string>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "actionIdentifier"))),
         JSIConverter<std::optional<margelo::nitro::alipush::AliPushAppState>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "appState"))),
@@ -92,7 +91,7 @@ namespace margelo::nitro {
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "subtitle"), JSIConverter<std::optional<std::string>>::toJSI(runtime, arg.subtitle));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "body"), JSIConverter<std::optional<std::string>>::toJSI(runtime, arg.body));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "badge"), JSIConverter<std::optional<double>>::toJSI(runtime, arg.badge));
-      obj.setProperty(runtime, PropNameIDCache::get(runtime, "extras"), JSIConverter<std::optional<std::shared_ptr<AnyMap>>>::toJSI(runtime, arg.extras));
+      obj.setProperty(runtime, PropNameIDCache::get(runtime, "extras"), JSIConverter<std::optional<std::string>>::toJSI(runtime, arg.extras));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "type"), JSIConverter<std::optional<margelo::nitro::alipush::AliPushMessageType>>::toJSI(runtime, arg.type));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "actionIdentifier"), JSIConverter<std::optional<std::string>>::toJSI(runtime, arg.actionIdentifier));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "appState"), JSIConverter<std::optional<margelo::nitro::alipush::AliPushAppState>>::toJSI(runtime, arg.appState));
@@ -111,7 +110,7 @@ namespace margelo::nitro {
       if (!JSIConverter<std::optional<std::string>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "subtitle")))) return false;
       if (!JSIConverter<std::optional<std::string>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "body")))) return false;
       if (!JSIConverter<std::optional<double>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "badge")))) return false;
-      if (!JSIConverter<std::optional<std::shared_ptr<AnyMap>>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "extras")))) return false;
+      if (!JSIConverter<std::optional<std::string>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "extras")))) return false;
       if (!JSIConverter<std::optional<margelo::nitro::alipush::AliPushMessageType>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "type")))) return false;
       if (!JSIConverter<std::optional<std::string>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "actionIdentifier")))) return false;
       if (!JSIConverter<std::optional<margelo::nitro::alipush::AliPushAppState>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "appState")))) return false;

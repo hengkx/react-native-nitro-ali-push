@@ -15,8 +15,6 @@
 #include "JAliPushAppState.hpp"
 #include "JAliPushMessageType.hpp"
 #include "JVariant_Double_String.hpp"
-#include <NitroModules/AnyMap.hpp>
-#include <NitroModules/JAnyMap.hpp>
 #include <optional>
 #include <string>
 #include <variant>
@@ -48,8 +46,8 @@ namespace margelo::nitro::alipush {
       jni::local_ref<jni::JString> body = this->getFieldValue(fieldBody);
       static const auto fieldBadge = clazz->getField<jni::JDouble>("badge");
       jni::local_ref<jni::JDouble> badge = this->getFieldValue(fieldBadge);
-      static const auto fieldExtras = clazz->getField<JAnyMap::javaobject>("extras");
-      jni::local_ref<JAnyMap::javaobject> extras = this->getFieldValue(fieldExtras);
+      static const auto fieldExtras = clazz->getField<jni::JString>("extras");
+      jni::local_ref<jni::JString> extras = this->getFieldValue(fieldExtras);
       static const auto fieldType = clazz->getField<JAliPushMessageType>("type");
       jni::local_ref<JAliPushMessageType> type = this->getFieldValue(fieldType);
       static const auto fieldActionIdentifier = clazz->getField<jni::JString>("actionIdentifier");
@@ -63,7 +61,7 @@ namespace margelo::nitro::alipush {
         subtitle != nullptr ? std::make_optional(subtitle->toStdString()) : std::nullopt,
         body != nullptr ? std::make_optional(body->toStdString()) : std::nullopt,
         badge != nullptr ? std::make_optional(badge->value()) : std::nullopt,
-        extras != nullptr ? std::make_optional(extras->cthis()->getMap()) : std::nullopt,
+        extras != nullptr ? std::make_optional(extras->toStdString()) : std::nullopt,
         type != nullptr ? std::make_optional(type->toCpp()) : std::nullopt,
         actionIdentifier != nullptr ? std::make_optional(actionIdentifier->toStdString()) : std::nullopt,
         appState != nullptr ? std::make_optional(appState->toCpp()) : std::nullopt,
@@ -77,7 +75,7 @@ namespace margelo::nitro::alipush {
      */
     [[maybe_unused]]
     static jni::local_ref<JAliPushMessage::javaobject> fromCpp(const AliPushMessage& value) {
-      using JSignature = JAliPushMessage(jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JDouble>, jni::alias_ref<JAnyMap::javaobject>, jni::alias_ref<JAliPushMessageType>, jni::alias_ref<jni::JString>, jni::alias_ref<JAliPushAppState>, jni::alias_ref<JVariant_Double_String>);
+      using JSignature = JAliPushMessage(jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JDouble>, jni::alias_ref<jni::JString>, jni::alias_ref<JAliPushMessageType>, jni::alias_ref<jni::JString>, jni::alias_ref<JAliPushAppState>, jni::alias_ref<JVariant_Double_String>);
       static const auto clazz = javaClassStatic();
       static const auto create = clazz->getStaticMethod<JSignature>("fromCpp");
       return create(
@@ -86,7 +84,7 @@ namespace margelo::nitro::alipush {
         value.subtitle.has_value() ? jni::make_jstring(value.subtitle.value()) : nullptr,
         value.body.has_value() ? jni::make_jstring(value.body.value()) : nullptr,
         value.badge.has_value() ? jni::JDouble::valueOf(value.badge.value()) : nullptr,
-        value.extras.has_value() ? JAnyMap::create(value.extras.value()) : nullptr,
+        value.extras.has_value() ? jni::make_jstring(value.extras.value()) : nullptr,
         value.type.has_value() ? JAliPushMessageType::fromCpp(value.type.value()) : nullptr,
         value.actionIdentifier.has_value() ? jni::make_jstring(value.actionIdentifier.value()) : nullptr,
         value.appState.has_value() ? JAliPushAppState::fromCpp(value.appState.value()) : nullptr,
