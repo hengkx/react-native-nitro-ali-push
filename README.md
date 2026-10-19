@@ -161,28 +161,27 @@ api 'com.aliyun.ams:alicloud-android-third-push-meizu:3.10.1'
 api 'com.aliyun.ams:alicloud-android-third-push-honor:3.10.1'
 ```
 
-这些依赖**不需要在代码里逐个调用注册 API**。机制是：`initPush` 内部的 `PushServiceFactory.init()` 会触发 SDK 的 `ChannelManager` 扫描上述各厂商 `IPushService` 实现，对每个厂商判断是否**同时满足**以下三点，满足才真正注册该通道：
+这些 `third-push-*` 依赖**不会自动注册任何厂商通道**。反编译 `alicloud-android-third-push:3.9.x` 的字节码已经验证：基础包和核心包里搜不到 `MIPUSH_APPID` 等 meta-data 字符串，阿里云模块自身完全不去读 manifest。每个厂商的 `XxxRegister` 都需要宿主**显式调用**一次：
 
-1. 对应的 `third-push-*` 模块在 classpath（即上面的依赖，已具备）；
-2. 宿主 `AndroidManifest.xml` 里配了**该厂商的 appId / appKey** meta-data；
-3. 厂商**自家的推送 SDK** 也在工程里（这些 `third-push` 模块只做桥接，不打包厂商 SDK）。
+| 厂商 | 注册类 | 调用方式 | appId/appKey 来源 |
+| --- | --- | --- | --- |
+| 华为 | `com.alibaba.sdk.android.push.huawei.HuaWeiRegister` | `register(Application)` 无参 | 厂商 SDK 读根目录 `agconnect-services.json` 与 manifest `com.huawei.hms.client.appid` |
+| 荣耀 | `com.alibaba.sdk.android.push.HonorRegister` | `register(Application)` 无参 | manifest `com.hihonor.push.app_id` |
+| 小米 | `com.alibaba.sdk.android.push.register.MiPushRegister` | `register(context, appId, appKey)` | **当参数传入**（不是 manifest） |
+| OPPO | `com.alibaba.sdk.android.push.register.OppoRegister` | `register(context, appKey, appSecret)` | **当参数传入** |
+| vivo | `com.alibaba.sdk.android.push.register.VivoRegister` | `register(context)` 无参 | manifest `VIVOPUSH_APPID` / `VIVOPUSH_APPKEY`（由 vivo 自己的 SDK 读取） |
+| 魅族 | `com.alibaba.sdk.android.push.register.MeizuRegister` | `register(context, appId, appKey)` | **当参数传入** |
 
-因此"注册"是**配置驱动**的。每个厂商需要你在宿主工程里补两件事：引入厂商自己的 SDK + 在 `AndroidManifest.xml` 填阿里云约定的 meta-data（注意 key 是阿里云这套，不是厂商原生那套）。
+> 每台设备只会启用与自身品牌匹配的通道；其它厂商即使调了 `register` 也会在对应品牌机型上被 SDK 跳过。
 
-| 厂商 | 需额外引入的厂商 SDK | `AndroidManifest.xml` meta-data |
-| --- | --- | --- |
-| 华为 | `com.huawei.hms:push` + 根目录 `agconnect-services.json` | `com.huawei.hms.client.appid` = `appid=xxxxxxx` |
-| 荣耀 | honor push SDK（`com.hihonor.mcs:push` 等） | `com.hihonor.push.app_id` = `xxxxxxx` |
-| 小米 | 小米推送 SDK | `MIPUSH_APPID` / `MIPUSH_APPKEY` |
-| OPPO | OPPO Push SDK | `OPPOPUSH_APPKEY` / `OPPOPUSH_APPSECRET` |
-| vivo | vivo Push SDK | `VIVOPUSH_APPID` / `VIVOPUSH_APPKEY` |
-| 魅族 | 魅族推送 SDK | `MEIZU_PUSH_APPID` / `MEIZU_PUSH_APPKEY` |
+`register(...)` 通常建议在宿主 `Application.onCreate()` 里、`PushServiceFactory.init()` **之后**调用。每家厂商在自己的官方接入文档里都给出了完整 Java 写法（含权限与 service 注册），可按需参照。`OPPOPUSH_APPSECRET` 等参数也可改为通过阿里云约定 meta-data 传入：`third-push-oppo` 等模块支持的 meta-data key 是 `OPPOPUSH_APPKEY` / `OPPOPUSH_APPSECRET`、`MEIZU_PUSH_APPID` / `MEIZU_PUSH_APPKEY` 等（如果你的 `register` 变体支持读取 manifest）。
 
-> 每台设备只会启用与自身品牌匹配的通道；其余厂商即使配了 meta-data 也会在对应品牌机型上被跳过（默认行为），不会报错。
+**⚠ 重要：本库 `initPush` 不会替你调这些 `XxxRegister`。** 如果你只跑 `initPush`，**厂商通道不会被注册**。有两种处理方式：
 
-各厂商通常还要求在 manifest 里声明自己的 `<service>` / `<receiver>` / 权限（按厂商官方文档补齐）。
+1. **在宿主原生层显式调用**（按上表）。RN 工程需要在 `MainApplication.onCreate` 里写几行 Kotlin/Java（在 `ReactNativeHost` 创建前 `PushServiceFactory.init`，再调各 `XxxRegister.register`）。这是最直接的方式。
+2. **等本库加 JS 暴露的厂商注册 API**（plan）：会在 `initPush` 之外增加一个可选方法 `registerVendorChannels({ xiaomi: {appId, appKey}, oppo: {...}, meizu: {...} }）`（华为/荣耀/vivo 仍由 manifest 驱动，无需参数），由 Nitro spec 生成对应的原生实现。届时你可以从 JS 一处调起来。
 
-**验证是否注册成功**：监听 `AliPushMessageReceiver.onChannelRegistration` 的日志（`onChannelRegistration: <errorCode>`）。errorCode 为 `0` 表示该厂商通道注册成功；非 `0` 通常是该厂商的 appId/appKey 或厂商 SDK 没配齐。
+**验证是否注册成功**：监听 `AliPushMessageReceiver.onChannelRegistration` 的日志（`onChannelRegistration: <errorCode>`）。errorCode 为 `0` 表示该厂商通道注册成功；非 `0` 通常是 appId/appKey 或厂商 SDK 没配齐。
 
 **厂商通道通知点击**：走厂商系统通道下发的通知**不**经过阿里云的 `MessageReceiver`，而是通过厂商自己的点击 intent 拉起 App。本库提供了 `ThirdPartMessageActivity` 做中转（拉起后 `dispatchFromIntent` 把数据派发到 JS 的 `aliyunPushReceived`）。宿主需要在 `AndroidManifest.xml` 给该 Activity 配置对应厂商要求的 `intent-filter`（scheme / action），否则厂商通知点击可能打不开 App 或拿不到数据：
 
