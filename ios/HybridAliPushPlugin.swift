@@ -312,12 +312,12 @@ public final class HybridAliPushPlugin: HybridAliPushPluginSpec, UNUserNotificat
 
   // MARK: - 暴露给 JS 的方法
 
-  func initPush(appKey: String, appSecret: String) throws -> Promise<Void> {
+  public func initPush(appKey: String, appSecret: String) throws -> Promise<Void> {
     // iOS 端初始化在 AppDelegate 中完成，这里直接成功。
     return Promise.resolved()
   }
 
-  func getDeviceId() throws -> Promise<String> {
+  public func getDeviceId() throws -> Promise<String> {
     return Promise.async {
       if let deviceId = CloudPushSDK.getDeviceId() {
         return deviceId
@@ -327,7 +327,7 @@ public final class HybridAliPushPlugin: HybridAliPushPluginSpec, UNUserNotificat
     }
   }
 
-  func bindAccount(account: String) throws -> Promise<Void> {
+  public func bindAccount(account: String) throws -> Promise<Void> {
     return Promise.async {
       try await withCheckedThrowingContinuation { continuation in
         CloudPushSDK.bindAccount(account, withCallback: { res in
@@ -343,7 +343,7 @@ public final class HybridAliPushPlugin: HybridAliPushPluginSpec, UNUserNotificat
     }
   }
 
-  func unbindAccount() throws -> Promise<Void> {
+  public func unbindAccount() throws -> Promise<Void> {
     return Promise.async {
       try await withCheckedThrowingContinuation { continuation in
         CloudPushSDK.unbindAccount(withCallback: { res in
@@ -359,7 +359,7 @@ public final class HybridAliPushPlugin: HybridAliPushPluginSpec, UNUserNotificat
     }
   }
 
-  func bindTag(target: Double, tags: [String], alias: Variant_NullType_String?) throws -> Promise<Void> {
+  public func bindTag(target: Double, tags: [String], alias: Variant_NullType_String?) throws -> Promise<Void> {
     let aliasString: String?
     if case .second(let s) = alias {
       aliasString = s
@@ -381,7 +381,7 @@ public final class HybridAliPushPlugin: HybridAliPushPluginSpec, UNUserNotificat
     }
   }
 
-  func unbindTag(target: Double, tags: [String], alias: Variant_NullType_String?) throws -> Promise<Void> {
+  public func unbindTag(target: Double, tags: [String], alias: Variant_NullType_String?) throws -> Promise<Void> {
     let aliasString: String?
     if case .second(let s) = alias {
       aliasString = s
@@ -403,7 +403,7 @@ public final class HybridAliPushPlugin: HybridAliPushPluginSpec, UNUserNotificat
     }
   }
 
-  func listTags(target: Double) throws -> Promise<String> {
+  public func listTags(target: Double) throws -> Promise<String> {
     return Promise.async {
       try await withCheckedThrowingContinuation { continuation in
         CloudPushSDK.listTags(Int(target), withCallback: { res in
@@ -419,7 +419,7 @@ public final class HybridAliPushPlugin: HybridAliPushPluginSpec, UNUserNotificat
     }
   }
 
-  func addAlias(alias: String) throws -> Promise<Void> {
+  public func addAlias(alias: String) throws -> Promise<Void> {
     return Promise.async {
       try await withCheckedThrowingContinuation { continuation in
         CloudPushSDK.addAlias(alias, withCallback: { res in
@@ -435,7 +435,7 @@ public final class HybridAliPushPlugin: HybridAliPushPluginSpec, UNUserNotificat
     }
   }
 
-  func removeAlias(alias: String) throws -> Promise<Void> {
+  public func removeAlias(alias: String) throws -> Promise<Void> {
     return Promise.async {
       try await withCheckedThrowingContinuation { continuation in
         CloudPushSDK.removeAlias(alias, withCallback: { res in
@@ -451,7 +451,7 @@ public final class HybridAliPushPlugin: HybridAliPushPluginSpec, UNUserNotificat
     }
   }
 
-  func listAliases() throws -> Promise<String> {
+  public func listAliases() throws -> Promise<String> {
     return Promise.async {
       try await withCheckedThrowingContinuation { continuation in
         CloudPushSDK.listAliases(withCallback: { res in
@@ -467,17 +467,17 @@ public final class HybridAliPushPlugin: HybridAliPushPluginSpec, UNUserNotificat
     }
   }
 
-  func setApplicationIconBadgeNumber(badge: Double) throws -> Promise<Void> {
+  public func setApplicationIconBadgeNumber(badge: Double) throws -> Promise<Void> {
     return Promise.async {
       UIApplication.shared.applicationIconBadgeNumber = Int(badge)
     }
   }
 
-  func getApplicationIconBadgeNumber() throws -> Promise<Double> {
+  public func getApplicationIconBadgeNumber() throws -> Promise<Double> {
     return Promise.resolved(withResult: Double(UIApplication.shared.applicationIconBadgeNumber))
   }
 
-  func getInitialMessage() throws -> Promise<Variant_NullType_AliPushMessage> {
+  public func getInitialMessage() throws -> Promise<Variant_NullType_AliPushMessage> {
     if let cached = HybridAliPushPlugin.initialNotification {
       HybridAliPushPlugin.initialNotification = nil
       return Promise.resolved(withResult: .second(cached))
@@ -485,7 +485,7 @@ public final class HybridAliPushPlugin: HybridAliPushPluginSpec, UNUserNotificat
     return Promise.resolved(withResult: .first(NullType.null))
   }
 
-  func getAuthorizationStatus() throws -> Promise<Bool> {
+  public func getAuthorizationStatus() throws -> Promise<Bool> {
     return Promise.async {
       try await withCheckedThrowingContinuation { continuation in
         if #available(iOS 10.0, *) {
@@ -499,13 +499,13 @@ public final class HybridAliPushPlugin: HybridAliPushPluginSpec, UNUserNotificat
     }
   }
 
-  func syncBadgeNum(badge: Double) throws -> Promise<Void> {
+  public func syncBadgeNum(badge: Double) throws -> Promise<Void> {
     return Promise.async {
       CloudPushSDK.syncBadgeNum(Int(badge))
     }
   }
 
-  func addListener(listener: @escaping (AliPushMessage) -> Void) throws -> () -> Void {
+  public func addListener(listener: @escaping (AliPushMessage) -> Void) throws -> () -> Void {
     let id = UUID()
     HybridAliPushPlugin.listeners[id] = listener
     if let cached = HybridAliPushPlugin.initialNotification {
