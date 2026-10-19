@@ -33,16 +33,16 @@ export type AliPushListener = (message: AliPushMessage) => void;
 export interface AliPushPlugin
   extends HybridObject<{ ios: 'swift'; android: 'kotlin' }> {
   /**
-   * 初始化阿里云推送。
+   * 向阿里云推送服务注册应用（启动推送逻辑）。
    *
-   * - **Android**：通过 `appKey` / `appSecret` 向阿里云推送服务注册应用。
-   *   两个参数都传 = 代码方式；都省略 = 使用 `AndroidManifest.xml` 中
-   *   `com.alibaba.app.appkey` / `com.alibaba.app.appsecret` meta-data。
-   * - **iOS**：初始化在原生 `AppDelegate` 中完成（见 README），此方法为无操作。
+   * - **Android**：调用 SDK 的 `register(...)`。两个参数都传 = 代码方式；都省略
+   *   = 使用 `AndroidManifest.xml` 中 `com.alibaba.app.appkey` / `com.alibaba.app.appsecret`。
+   *   SDK 框架加载（`PushServiceFactory.init`）由本库的 `AliPushInitProvider` 在
+   *   `Application.onCreate` 之前完成，**此方法不涉及隐私采集**——但请在获得用户
+   *   隐私授权后再调用 `initPush`，以免违规。
+   * - **iOS**：无操作（iOS 端初始化在原生 `AppDelegate` 中通过 `setParams` 完成）。
    */
   initPush(appKey?: string, appSecret?: string): Promise<void>;
-
-
 
   /** 获取设备唯一标识 `deviceId`。 */
   getDeviceId(): Promise<string>;

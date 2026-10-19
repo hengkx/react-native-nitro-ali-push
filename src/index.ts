@@ -23,25 +23,19 @@ import type { AliPushEvent, AliPushMessage, AliPushTagTarget } from './types';
 const AliPushNative = NitroModules.createHybridObject<AliPushPlugin>('AliPushPlugin');
 
 /**
- * 初始化阿里云推送。
+ * 向阿里云推送服务注册应用（启动推送逻辑）。
  *
  * @remarks
- * **Android**：调用此方法并通过 `appKey` / `appSecret` 向阿里云推送服务注册应用，
- * 必须在 `App` 挂载前调用。需要在 `AndroidManifest.xml` 中配置推送 `AppKey` /
- * `AppSecret`（见 README）。
+ * **Android**：调用 SDK 的 `register(...)` 完成设备注册，这是真正开始推送、并采集
+ * 设备标识的一步，因此**请在获得用户隐私授权后再调用**。
  *
- * **iOS**：推送初始化在原生 `AppDelegate` 中通过 `CloudPushSDK` 完成，此方法在
- * iOS 上为无操作。
+ * SDK 框架的加载（`PushServiceFactory.init`，按官方「2.1 初始化」要求须在
+ * `Application.onCreate` 之前完成）由本库的 `AliPushInitProvider` 自动完成，
+ * **无需宿主写任何原生代码**，且该阶段不采集隐私。
  *
  * @param appKey - 阿里云推送控制台分配的 AppKey。省略则走 manifest 配置方式。
  * @param appSecret - 阿里云推送控制台分配的 AppSecret。省略则走 manifest 配置方式。
- * @returns 初始化完成的 Promise。
- *
- * @remarks
- * Android 支持两种配置方式（对应官方 SDK「2.1 初始化」）：
- * 1. **代码方式** —— 传入 `appKey` / `appSecret`；
- * 2. **manifest 方式** —— 两个参数都省略，SDK 读取 `AndroidManifest.xml` 中的
- *    `com.alibaba.app.appkey` / `com.alibaba.app.appsecret` meta-data。
+ * @returns 注册完成的 Promise。
  *
  * @example
  * ```ts
@@ -55,8 +49,6 @@ const AliPushNative = NitroModules.createHybridObject<AliPushPlugin>('AliPushPlu
 export function initPush(appKey?: string, appSecret?: string): Promise<void> {
   return AliPushNative.initPush(appKey, appSecret);
 }
-
-
 
 /**
  * 获取设备唯一标识 `deviceId`。

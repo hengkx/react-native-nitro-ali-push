@@ -137,12 +137,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 </application>
 ```
 
-### 2. 初始化
+### 2. 初始化（分两步）
 
-Android 端在 JS 中调用 `initPush` 即可。对应官方 SDK「2.1 初始化」文档，两种方式二选一：
+按阿里云官方要求，初始化拆成两个阶段，本库已把第一阶段做成自动的：
 
-- **代码方式**：传 `appKey` / `appSecret`（最常用，与上一节 manifest meta-data 配置互斥，二选一即可）。
-- **manifest 方式**：省略两个参数，SDK 直接读 `AndroidManifest.xml` 中 `com.alibaba.app.appkey` / `com.alibaba.app.appsecret`。
+| 阶段 | 做什么 | 何时发生 | 是否采集隐私 |
+| --- | --- | --- | --- |
+| ① 加载框架（官方「2.1 初始化」） | `PushServiceFactory.init(context)` —— 加载推送框架、初始化参数，**不启动推送逻辑** | 本库 `AliPushInitProvider` 自动完成，其 `onCreate` 早于 `Application.onCreate`，**宿主无需写任何原生代码** | 否 |
+| ② 注册设备 | `CloudPushService.register(...)` —— 真正启动推送 | 你在 JS 里调用 `initPush` 时 | 是 |
+
+因此在 JS 里只需做第 ② 步，且**建议在用户同意隐私政策之后再调用**：
 
 ```ts
 import AliPush from 'react-native-nitro-ali-push';
@@ -150,13 +154,11 @@ import AliPush from 'react-native-nitro-ali-push';
 // 代码方式
 await AliPush.initPush('<appKey>', '<appSecret>');
 
-// 或 manifest 方式（manifest 已配 appkey/appsecret 时）
+// manifest 方式（AndroidManifest.xml 已配 appkey/appsecret）
 // await AliPush.initPush();
 ```
 
 > 注意：厂商通道（华为 / 小米 / OPPO / vivo / 魅族 / 荣耀）**不由 `initPush` 注册**，需要在宿主工程的原生层自行调用各厂商 `Register`。见下面「3. 厂商通道」。
-
-> 严格按官方 2.1 要求，`PushServiceFactory.init(context)` 这一步（"初始化参数、不启动推送逻辑"）应在 `Application.onCreate` 中执行；本库受限于 RN 启动顺序，**由 `initPush` 内部完成**——晚于 onCreate 一些但对功能无影响。若对启动时序有严格要求，宿主可在 `MainApplication.onCreate` 里先调一次 `PushServiceFactory.init(context)`（无 key 版），再走 `initPush`。
 
 ### 3. 厂商通道（华为 / 小米 / OPPO / vivo / 魅族 / 荣耀）
 
@@ -305,7 +307,7 @@ const badge = await AliPush.getApplicationIconBadgeNumber();
 
 | 方法 | 说明 | 平台差异 |
 | --- | --- | --- |
-| `initPush(appKey?, appSecret?)` | 初始化推送 | Android 必需；`appKey` / `appSecret` 都省略时走 manifest 配置。iOS 为无操作（在 AppDelegate 初始化） |
+| `initPush(appKey?, appSecret?)` | 注册设备、启动推送 | Android 必需，建议**在用户同意隐私后**调用；`appKey` / `appSecret` 都省略时走 manifest 配置。iOS 为无操作（在 AppDelegate 用 `setParams` 初始化）。框架加载由本库自动完成，不在本方法内 |
 
 | `getDeviceId()` | 获取设备 `deviceId` | — |
 | `bindAccount(account)` | 绑定账号 | — |

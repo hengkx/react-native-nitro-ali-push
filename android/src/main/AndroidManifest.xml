@@ -8,6 +8,15 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application>
+        <!-- 阿里云推送框架加载器：onCreate 早于 Application.onCreate，
+             只执行 PushServiceFactory.init（加载框架、初始化参数），不采集隐私。
+             register 由 JS 在用户同意隐私后调用 initPush 触发。 -->
+        <provider
+            android:name="com.margelo.nitro.alipush.AliPushInitProvider"
+            android:authorities="${applicationId}.alipush.init"
+            android:exported="false"
+            android:initOrder="100" />
+
         <!-- 阿里云推送广播接收器（务必 exported=false） -->
         <receiver
             android:name="com.margelo.nitro.alipush.AliPushMessageReceiver"

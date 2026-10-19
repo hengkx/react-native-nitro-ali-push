@@ -71,44 +71,21 @@ class HybridAliPushPlugin : HybridAliPushPluginSpec() {
       suspendCancellableCoroutine { cont ->
         try {
           val applicationContext = appContext()
+          // PushServiceFactory.init 已由 AliPushInitProvider 在 Application.onCreate 之前完成。
+          // 此处只触发 register（涉及设备标识采集，等用户同意隐私后再调用）。
+          val service = PushServiceFactory.getCloudPushService()
           if (appKey != null && appSecret != null) {
-            // 代码方式：带 appKey/appSecret 走 register(...)
-            PushServiceFactory.init(applicationContext)
-            PushServiceFactory.getCloudPushService()
-              .register(
-                applicationContext,
-                appKey,
-                appSecret,
-                object : CommonCallback {
-                  override fun onSuccess(response: String?) {
-                    cont.resume(Unit)
-                  }
-
-                  override fun onFailed(errorCode: String?, errorMessage: String?) {
-                    cont.resumeWithException(
-                      RuntimeException("initPush failed: $errorCode $errorMessage")
-                    )
-                  }
-                },
-              )
+            service.register(applicationContext, appKey, appSecret, object : CommonCallback {
+              override fun onSuccess(response: String?) = cont.resume(Unit)
+              override fun onFailed(errorCode: String?, errorMessage: String?) =
+                cont.resumeWithException(RuntimeException("initPush failed: $errorCode $errorMessage"))
+            })
           } else {
-            // manifest 方式：SDK 从 AndroidManifest 读 com.alibaba.app.appkey/appsecret
-            PushServiceFactory.init(applicationContext)
-            PushServiceFactory.getCloudPushService()
-              .register(
-                applicationContext,
-                object : CommonCallback {
-                  override fun onSuccess(response: String?) {
-                    cont.resume(Unit)
-                  }
-
-                  override fun onFailed(errorCode: String?, errorMessage: String?) {
-                    cont.resumeWithException(
-                      RuntimeException("initPush failed: $errorCode $errorMessage")
-                    )
-                  }
-                },
-              )
+            service.register(applicationContext, object : CommonCallback {
+              override fun onSuccess(response: String?) = cont.resume(Unit)
+              override fun onFailed(errorCode: String?, errorMessage: String?) =
+                cont.resumeWithException(RuntimeException("initPush failed: $errorCode $errorMessage"))
+            })
           }
         } catch (e: Throwable) {
           cont.resumeWithException(e)
@@ -116,8 +93,6 @@ class HybridAliPushPlugin : HybridAliPushPluginSpec() {
       }
     }
   }
-
-
 
   override fun getDeviceId(): Promise<String> {
     return Promise.parallel {
