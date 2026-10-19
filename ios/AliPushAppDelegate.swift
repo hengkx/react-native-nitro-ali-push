@@ -53,7 +53,7 @@ public final class AliPushAppDelegate: NSObject, UNUserNotificationCenterDelegat
   ) {
     registerAPNs(createNotificationCategoryHandler)
     initCloudPush(appKey: appKey, appSecret: appSecret)
-    CloudPushSDK.sendNotificationAck(lauchOptions)
+    CloudPushSDK.sendNotificationAck(lauchOptions ?? [:])
   }
 
   // MARK: - APNs 注册
@@ -77,10 +77,10 @@ public final class AliPushAppDelegate: NSObject, UNUserNotificationCenterDelegat
 
   private func initCloudPush(appKey: String, appSecret: String) {
     CloudPushSDK.start(withAppkey: appKey, appSecret: appSecret) { res in
-      if res?.success ?? false {
+      if res.success {
         DLog("Push SDK init success, deviceId: \(String(describing: CloudPushSDK.getDeviceId())).")
       } else {
-        DLog("Push SDK init failed, error: \(String(describing: res?.error)).")
+        DLog("Push SDK init failed, error: \(String(describing: res.error)).")
       }
     }
   }
@@ -92,10 +92,10 @@ public final class AliPushAppDelegate: NSObject, UNUserNotificationCenterDelegat
     didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
   ) {
     CloudPushSDK.registerDevice(deviceToken) { res in
-      if res?.success ?? false {
+      if res.success {
         DLog("Register deviceToken success.")
       } else {
-        DLog("Register deviceToken failed, error: \(String(describing: res?.error)).")
+        DLog("Register deviceToken failed, error: \(String(describing: res.error)).")
       }
     }
   }

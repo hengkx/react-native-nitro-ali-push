@@ -41,7 +41,7 @@ final class HybridAliPushPlugin: HybridAliPushPluginSpec {
             continuation.resume()
           } else {
             continuation.resume(throwing: RuntimeError.error(
-              withMessage: res?.error?.localizedDescription ?? "unknown error"))
+              withMessage: res.error?.localizedDescription ?? "unknown error"))
           }
         })
       }
@@ -51,12 +51,12 @@ final class HybridAliPushPlugin: HybridAliPushPluginSpec {
   func unbindAccount() throws -> Promise<Void> {
     return Promise.async {
       try await withCheckedThrowingContinuation { continuation in
-        CloudPushSDK.unbindAccount(withCallback: { res in
+        CloudPushSDK.unbindAccount({ res in
           if let res = res, res.success {
             continuation.resume()
           } else {
             continuation.resume(throwing: RuntimeError.error(
-              withMessage: res?.error?.localizedDescription ?? "unknown error"))
+              withMessage: res.error?.localizedDescription ?? "unknown error"))
           }
         })
       }
@@ -67,12 +67,12 @@ final class HybridAliPushPlugin: HybridAliPushPluginSpec {
     let aliasString: String? = alias?.asType(String.self)
     return Promise.async {
       try await withCheckedThrowingContinuation { continuation in
-        CloudPushSDK.bindTag(Int(target), withTags: tags, withAlias: aliasString, withCallback: { res in
+        CloudPushSDK.bindTag(Int32(target), withTags: tags, withAlias: aliasString, withCallback: { res in
           if let res = res, res.success {
             continuation.resume()
           } else {
             continuation.resume(throwing: RuntimeError.error(
-              withMessage: res?.error?.localizedDescription ?? "unknown error"))
+              withMessage: res.error?.localizedDescription ?? "unknown error"))
           }
         })
       }
@@ -83,12 +83,12 @@ final class HybridAliPushPlugin: HybridAliPushPluginSpec {
     let aliasString: String? = alias?.asType(String.self)
     return Promise.async {
       try await withCheckedThrowingContinuation { continuation in
-        CloudPushSDK.unbindTag(Int(target), withTags: tags, withAlias: aliasString, withCallback: { res in
+        CloudPushSDK.unbindTag(Int32(target), withTags: tags, withAlias: aliasString, withCallback: { res in
           if let res = res, res.success {
             continuation.resume()
           } else {
             continuation.resume(throwing: RuntimeError.error(
-              withMessage: res?.error?.localizedDescription ?? "unknown error"))
+              withMessage: res.error?.localizedDescription ?? "unknown error"))
           }
         })
       }
@@ -98,12 +98,12 @@ final class HybridAliPushPlugin: HybridAliPushPluginSpec {
   func listTags(target: Double) throws -> Promise<[String]> {
     return Promise.async {
       try await withCheckedThrowingContinuation { continuation in
-        CloudPushSDK.listTags(Int(target), withCallback: { res in
+        CloudPushSDK.listTags(Int32(target), withCallback: { res in
           if let res = res, res.success {
             continuation.resume(returning: Self.splitCommaList(res.data as? String))
           } else {
             continuation.resume(throwing: RuntimeError.error(
-              withMessage: res?.error?.localizedDescription ?? "unknown error"))
+              withMessage: res.error?.localizedDescription ?? "unknown error"))
           }
         })
       }
@@ -118,7 +118,7 @@ final class HybridAliPushPlugin: HybridAliPushPluginSpec {
             continuation.resume()
           } else {
             continuation.resume(throwing: RuntimeError.error(
-              withMessage: res?.error?.localizedDescription ?? "unknown error"))
+              withMessage: res.error?.localizedDescription ?? "unknown error"))
           }
         })
       }
@@ -133,7 +133,7 @@ final class HybridAliPushPlugin: HybridAliPushPluginSpec {
             continuation.resume()
           } else {
             continuation.resume(throwing: RuntimeError.error(
-              withMessage: res?.error?.localizedDescription ?? "unknown error"))
+              withMessage: res.error?.localizedDescription ?? "unknown error"))
           }
         })
       }
@@ -143,12 +143,12 @@ final class HybridAliPushPlugin: HybridAliPushPluginSpec {
   func listAliases() throws -> Promise<[String]> {
     return Promise.async {
       try await withCheckedThrowingContinuation { continuation in
-        CloudPushSDK.listAliases(withCallback: { res in
+        CloudPushSDK.listAliases({ res in
           if let res = res, res.success {
             continuation.resume(returning: Self.splitCommaList(res.data as? String))
           } else {
             continuation.resume(throwing: RuntimeError.error(
-              withMessage: res?.error?.localizedDescription ?? "unknown error"))
+              withMessage: res.error?.localizedDescription ?? "unknown error"))
           }
         })
       }
@@ -189,7 +189,7 @@ final class HybridAliPushPlugin: HybridAliPushPluginSpec {
 
   func syncBadgeNum(badge: Double) throws -> Promise<Void> {
     return Promise.async {
-      CloudPushSDK.syncBadgeNum(Int(badge))
+      CloudPushSDK.syncBadgeNum(UInt(badge))
     }
   }
 
