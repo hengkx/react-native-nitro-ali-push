@@ -33,7 +33,7 @@ abstract class HybridAliPushPluginSpec: HybridObject() {
   // Methods
   @DoNotStrip
   @Keep
-  abstract fun register(appKey: String?, appSecret: String?): Promise<Unit>
+  abstract fun register(): Promise<Unit>
   
   @DoNotStrip
   @Keep

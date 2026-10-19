@@ -18,10 +18,10 @@ namespace margelo::nitro::alipush { struct AliPushMessage; }
 
 #include <NitroModules/Promise.hpp>
 #include <string>
-#include <optional>
 #include <vector>
 #include <NitroModules/Null.hpp>
 #include <variant>
+#include <optional>
 #include "AliPushMessage.hpp"
 #include <functional>
 
@@ -56,7 +56,7 @@ namespace margelo::nitro::alipush {
 
     public:
       // Methods
-      virtual std::shared_ptr<Promise<void>> register(const std::optional<std::string>& appKey, const std::optional<std::string>& appSecret) = 0;
+      virtual std::shared_ptr<Promise<void>> register() = 0;
       virtual std::shared_ptr<Promise<std::string>> getDeviceId() = 0;
       virtual std::shared_ptr<Promise<void>> bindAccount(const std::string& account) = 0;
       virtual std::shared_ptr<Promise<void>> unbindAccount() = 0;

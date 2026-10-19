@@ -73,27 +73,25 @@ class HybridAliPushPlugin : HybridAliPushPluginSpec() {
 
   // MARK: - 初始化 / 设备号
 
-  override fun register(appKey: String?, appSecret: String?): Promise<Unit> {
+  override fun register(): Promise<Unit> {
     return Promise.async {
       suspendCancellableCoroutine { cont ->
         try {
           val applicationContext = appContext()
-          // PushServiceFactory.init 已由 AliPushInitProvider 在 Application.onCreate 之前完成。
-          val service = PushServiceFactory.getCloudPushService()
-          val callback = object : CommonCallback {
-            override fun onSuccess(response: String?) {
-              // 阿里云通道注册成功后，再注册 manifest 里配置了参数的厂商通道。
-              registerVendorChannels()
-              cont.resume(Unit)
-            }
-            override fun onFailed(errorCode: String?, errorMessage: String?) =
-              cont.resumeWithException(RuntimeException("register failed: $errorCode $errorMessage"))
-          }
-          if (appKey != null && appSecret != null) {
-            service.register(applicationContext, appKey, appSecret, callback)
-          } else {
-            service.register(applicationContext, callback)
-          }
+          // appKey / appSecret 由 AliPushInitProvider 的 PushServiceFactory.init 决定
+          // （读 AndroidManifest 的 com.alibaba.app.appkey / appsecret）。
+          // 注意：SDK 的 4 参 register(Context, appKey, appSecret, cb) 已废弃 —— 内部直接
+          // onFailed（提示改用 init），切勿使用。这里必须走 2 参版本。
+          PushServiceFactory.getCloudPushService()
+            .register(applicationContext, object : CommonCallback {
+              override fun onSuccess(response: String?) {
+                // 阿里云通道注册成功后，再注册 manifest 里配置了参数的厂商通道。
+                registerVendorChannels()
+                cont.resume(Unit)
+              }
+              override fun onFailed(errorCode: String?, errorMessage: String?) =
+                cont.resumeWithException(RuntimeException("register failed: $errorCode $errorMessage"))
+            })
         } catch (e: Throwable) {
           cont.resumeWithException(e)
         }

@@ -312,7 +312,7 @@ public final class HybridAliPushPlugin: HybridAliPushPluginSpec, UNUserNotificat
 
   // MARK: - 暴露给 JS 的方法
 
-  public func register(appKey: String?, appSecret: String?) throws -> Promise<Void> {
+  public func register() throws -> Promise<Void> {
     // iOS 端初始化与注册都在 AppDelegate 中通过 shared.setParams 完成，这里不做任何事。
     return Promise.resolved()
   }

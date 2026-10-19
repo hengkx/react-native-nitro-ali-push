@@ -144,21 +144,22 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 | 阶段 | 做什么 | 何时发生 | 是否采集隐私 |
 | --- | --- | --- | --- |
 | ① 加载框架（官方「2.1 初始化」） | `PushServiceFactory.init(context)` —— 加载推送框架、初始化参数，**不启动推送逻辑** | 本库 `AliPushInitProvider` 自动完成，其 `onCreate` 早于 `Application.onCreate` | 否 |
-| ② 注册通道 | `CloudPushService.register(...)` + 各厂商 `XxxRegister.register(...)` | 你在 JS 里调用 `AliPush.register()` 时 | 是 |
+| ② 注册通道 | `CloudPushService.register(context, callback)` + 各厂商 `XxxRegister.register(...)` | 你在 JS 里调用 `AliPush.register()` 时 | 是 |
 
 因此 JS 里只需做第 ② 步，**建议放在用户同意隐私政策之后**：
 
 ```ts
 import AliPush from 'react-native-nitro-ali-push';
 
-// 代码方式
-await AliPush.register('<appKey>', '<appSecret>');
-
-// manifest 方式（AndroidManifest.xml 已配 appkey/appsecret）
 await AliPush.register();
 ```
 
 `register()` 会**一次性**注册阿里云通道**以及** `AndroidManifest.xml` 里配置了参数的全部厂商通道（华为 / 荣耀 / vivo / 小米 / OPPO / 魅族），未配置的厂商自动跳过，无需宿主写任何原生代码。
+
+> **`register()` 不接受 appKey / appSecret**。SDK 的 `register(Context, appKey, appSecret, callback)` 已废弃——内部不注册任何东西、直接回调 `onFailed`，错误信息为「请使用 `PushServiceFactory.init(Context, String, String)` 动态设置 appKey appSecret」。appKey / appSecret 是阶段 ① `init` 的事，本库走 manifest 配置。
+>
+> 若你确实要使用**代码方式**（不便写入 manifest），请在宿主 `MainApplication.onCreate` 中自行调用
+> `PushServiceFactory.init(context, appKey, appSecret)`——它会覆盖 `AliPushInitProvider` 的无参 `init`，随后 JS 端照常调用 `AliPush.register()`。
 
 ### 3. 厂商通道（华为 / 小米 / OPPO / vivo / 魅族 / 荣耀）
 
@@ -295,7 +296,7 @@ const badge = await AliPush.getApplicationIconBadgeNumber();
 
 | 方法 | 说明 | 平台差异 |
 | --- | --- | --- |
-| `register(appKey?, appSecret?)` | 注册阿里云通道 + 所有已配置的厂商通道 | Android 必需，建议**在用户同意隐私后**调用；`appKey` / `appSecret` 都省略时走 manifest 配置。iOS 为无操作（在 AppDelegate 用 `setParams` 初始化）。框架加载由本库自动完成 |
+| `register()` | 注册阿里云通道 + 所有已配置的厂商通道 | Android 必需，建议**在用户同意隐私后**调用。appKey / appSecret 由 manifest（或宿主 `init`）决定，不作为本方法参数。iOS 为无操作（在 AppDelegate 用 `setParams` 初始化） |
 
 | `getDeviceId()` | 获取设备 `deviceId` | — |
 | `bindAccount(account)` | 绑定账号 | — |

@@ -21,10 +21,10 @@ namespace margelo::nitro::alipush { enum class AliPushAppState; }
 
 #include <NitroModules/Promise.hpp>
 #include <string>
-#include <optional>
 #include <vector>
 #include <NitroModules/Null.hpp>
 #include <variant>
+#include <optional>
 #include "AliPushMessage.hpp"
 #include <NitroModules/AnyMap.hpp>
 #include "AliPushMessageType.hpp"
@@ -81,8 +81,8 @@ namespace margelo::nitro::alipush {
 
   public:
     // Methods
-    inline std::shared_ptr<Promise<void>> register(const std::optional<std::string>& appKey, const std::optional<std::string>& appSecret) override {
-      auto __result = _swiftPart.register(appKey, appSecret);
+    inline std::shared_ptr<Promise<void>> register() override {
+      auto __result = _swiftPart.register();
       if (__result.hasError()) [[unlikely]] {
         std::rethrow_exception(__result.error());
       }
