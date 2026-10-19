@@ -60,7 +60,7 @@ namespace margelo::nitro::alipush {
     std::shared_ptr<Promise<void>> unbindAccount() override;
     std::shared_ptr<Promise<void>> bindTag(double target, const std::vector<std::string>& tags, const std::optional<std::variant<nitro::NullType, std::string>>& alias) override;
     std::shared_ptr<Promise<void>> unbindTag(double target, const std::vector<std::string>& tags, const std::optional<std::variant<nitro::NullType, std::string>>& alias) override;
-    std::shared_ptr<Promise<std::string>> listTags(double target) override;
+    std::shared_ptr<Promise<std::vector<std::string>>> listTags(double target) override;
     std::shared_ptr<Promise<void>> addAlias(const std::string& alias) override;
     std::shared_ptr<Promise<void>> removeAlias(const std::string& alias) override;
     std::shared_ptr<Promise<std::string>> listAliases() override;

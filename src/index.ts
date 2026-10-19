@@ -121,9 +121,9 @@ export function unbindTag(
  * 列出当前已绑定的标签。
  *
  * @param target - 目标类型：`1` 设备 / `2` 账号 / `3` 别名。
- * @returns 解析为服务端响应字符串（含标签列表）的 Promise。
+ * @returns 解析为标签字符串数组的 Promise（服务端以逗号拼接，各端已拆分；无标签时为空数组）。
  */
-export function listTags(target: AliPushTagTarget): Promise<string> {
+export function listTags(target: AliPushTagTarget): Promise<string[]> {
   return AliPushNative.listTags(target);
 }
 

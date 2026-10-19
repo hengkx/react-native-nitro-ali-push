@@ -252,7 +252,7 @@ const badge = await AliPush.getApplicationIconBadgeNumber();
 | `unbindAccount()` | 解绑账号 | — |
 | `bindTag(target, tags, alias)` | 绑定标签 | `target`: 1 设备 / 2 账号 / 3 别名 |
 | `unbindTag(target, tags, alias)` | 解绑标签 | 同上 |
-| `listTags(target)` | 列出标签 | 返回服务端响应字符串 |
+| `listTags(target)` | 列出标签 | 返回 `string[]`（服务端逗号拼接，各端已拆分；无标签为 `[]`） |
 | `addAlias(alias)` / `removeAlias(alias)` | 添加 / 移除别名 | — |
 | `listAliases()` | 列出别名 | 返回服务端响应字符串 |
 | `setApplicationIconBadgeNumber(badge)` | 设置角标 | — |

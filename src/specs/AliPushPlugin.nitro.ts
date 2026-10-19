@@ -67,8 +67,12 @@ export interface AliPushPlugin
    */
   unbindTag(target: number, tags: string[], alias: string | null): Promise<void>;
 
-  /** 列出当前标签（返回服务端响应字符串）。 */
-  listTags(target: number): Promise<string>;
+  /**
+   * 列出当前标签。
+   *
+   * 服务端返回的是逗号拼接的字符串，各端会拆分为数组；无标签时返回空数组。
+   */
+  listTags(target: number): Promise<string[]>;
 
   /** 添加别名。 */
   addAlias(alias: string): Promise<void>;

@@ -18,6 +18,7 @@ namespace margelo::nitro::alipush { enum class AliPushAppState; }
 #include <NitroModules/JPromise.hpp>
 #include <NitroModules/JUnit.hpp>
 #include <string>
+#include <vector>
 #include <NitroModules/Null.hpp>
 #include "AliPushMessage.hpp"
 #include <variant>
@@ -35,7 +36,6 @@ namespace margelo::nitro::alipush { enum class AliPushAppState; }
 #include <functional>
 #include "JFunc_void.hpp"
 #include <NitroModules/JNICallable.hpp>
-#include <vector>
 #include "JVariant_NullType_String.hpp"
 #include "JFunc_void_AliPushMessage.hpp"
 
@@ -181,14 +181,23 @@ namespace margelo::nitro::alipush {
       return __promise;
     }();
   }
-  std::shared_ptr<Promise<std::string>> JHybridAliPushPluginSpec::listTags(double target) {
+  std::shared_ptr<Promise<std::vector<std::string>>> JHybridAliPushPluginSpec::listTags(double target) {
     static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<JPromise::javaobject>(double /* target */)>("listTags");
     auto __result = method(_javaPart, target);
     return [&]() {
-      auto __promise = Promise<std::string>::create();
+      auto __promise = Promise<std::vector<std::string>>::create();
       __result->cthis()->addOnResolvedListener([=](const jni::alias_ref<jni::JObject>& __boxedResult) {
-        auto __result = jni::static_ref_cast<jni::JString>(__boxedResult);
-        __promise->resolve(__result->toStdString());
+        auto __result = jni::static_ref_cast<jni::JArrayClass<jni::JString>>(__boxedResult);
+        __promise->resolve([&](auto&& __input) {
+          size_t __size = __input->size();
+          std::vector<std::string> __vector;
+          __vector.reserve(__size);
+          for (size_t __i = 0; __i < __size; __i++) {
+            auto __element = __input->getElement(__i);
+            __vector.push_back(__element->toStdString());
+          }
+          return __vector;
+        }(__result));
       });
       __result->cthis()->addOnRejectedListener([=](const jni::alias_ref<jni::JThrowable>& __throwable) {
         jni::JniException __jniError(__throwable);

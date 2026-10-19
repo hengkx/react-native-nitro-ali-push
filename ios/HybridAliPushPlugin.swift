@@ -124,7 +124,7 @@ public final class HybridAliPushPlugin: HybridAliPushPluginSpec, UNUserNotificat
   // MARK: - UNUserNotificationCenterDelegate
 
   /// App 处于前台时收到通知。
-  func userNotificationCenter(_ center: UNUserNotificationCenter,
+  public func userNotificationCenter(_ center: UNUserNotificationCenter,
                               willPresent notification: UNNotification,
                               withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
     DLog("Receive a notification in foreground.")
@@ -148,7 +148,7 @@ public final class HybridAliPushPlugin: HybridAliPushPluginSpec, UNUserNotificat
   }
 
   /// 用户点击 / 删除 / 自定义 action 回调。
-  func userNotificationCenter(_ center: UNUserNotificationCenter,
+  public func userNotificationCenter(_ center: UNUserNotificationCenter,
                               didReceive response: UNNotificationResponse,
                               withCompletionHandler completionHandler: @escaping () -> Void) {
     DLog("Open/delete a notification.")
@@ -403,12 +403,12 @@ public final class HybridAliPushPlugin: HybridAliPushPluginSpec, UNUserNotificat
     }
   }
 
-  public func listTags(target: Double) throws -> Promise<String> {
+  public func listTags(target: Double) throws -> Promise<[String]> {
     return Promise.async {
       try await withCheckedThrowingContinuation { continuation in
         CloudPushSDK.listTags(Int(target), withCallback: { res in
           if let res = res, res.success {
-            continuation.resume(returning: res.data as? String ?? "")
+            continuation.resume(returning: Self.splitCommaList(res.data as? String))
           } else {
             let err = res?.error
             continuation.resume(throwing: RuntimeError.error(
@@ -417,6 +417,17 @@ public final class HybridAliPushPlugin: HybridAliPushPluginSpec, UNUserNotificat
         })
       }
     }
+  }
+
+  /**
+   * 服务端以逗号拼接返回标签 / 别名，统一拆分为数组（去空白、丢空项）。
+   */
+  private static func splitCommaList(_ raw: String?) -> [String] {
+    guard let raw = raw, !raw.isEmpty else { return [] }
+    return raw
+      .split(separator: ",")
+      .map { $0.trimmingCharacters(in: .whitespaces) }
+      .filter { !$0.isEmpty }
   }
 
   public func addAlias(alias: String) throws -> Promise<Void> {

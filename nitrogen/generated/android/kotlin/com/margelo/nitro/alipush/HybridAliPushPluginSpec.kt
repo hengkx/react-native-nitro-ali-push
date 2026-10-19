@@ -57,7 +57,7 @@ abstract class HybridAliPushPluginSpec: HybridObject() {
   
   @DoNotStrip
   @Keep
-  abstract fun listTags(target: Double): Promise<String>
+  abstract fun listTags(target: Double): Promise<Array<String>>
   
   @DoNotStrip
   @Keep

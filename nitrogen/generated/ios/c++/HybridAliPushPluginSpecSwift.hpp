@@ -129,7 +129,7 @@ namespace margelo::nitro::alipush {
       auto __value = std::move(__result.value());
       return __value;
     }
-    inline std::shared_ptr<Promise<std::string>> listTags(double target) override {
+    inline std::shared_ptr<Promise<std::vector<std::string>>> listTags(double target) override {
       auto __result = _swiftPart.listTags(std::forward<decltype(target)>(target));
       if (__result.hasError()) [[unlikely]] {
         std::rethrow_exception(__result.error());

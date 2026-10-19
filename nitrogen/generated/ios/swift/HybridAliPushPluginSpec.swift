@@ -19,7 +19,7 @@ public protocol HybridAliPushPluginSpec_protocol: HybridObject {
   func unbindAccount() throws -> Promise<Void>
   func bindTag(target: Double, tags: [String], alias: Variant_NullType_String?) throws -> Promise<Void>
   func unbindTag(target: Double, tags: [String], alias: Variant_NullType_String?) throws -> Promise<Void>
-  func listTags(target: Double) throws -> Promise<String>
+  func listTags(target: Double) throws -> Promise<[String]>
   func addAlias(alias: String) throws -> Promise<Void>
   func removeAlias(alias: String) throws -> Promise<Void>
   func listAliases() throws -> Promise<String>
@@ -39,11 +39,7 @@ public extension HybridAliPushPluginSpec_protocol {
 }
 
 /// See ``HybridAliPushPluginSpec``
-// NOTE: 这里手动让生成的 base 继承 NSObject，因为实现类 HybridAliPushPlugin 需要
-// 同时作为 UNUserNotificationCenterDelegate 并暴露 @objc 方法给 AppDelegate 调用，
-// 二者都要求 NSObject 协议。Nitro 0.37.x 生成的 base 默认不继承 NSObject，
-// 如需重新 codegen，记得把这一行保留（或改为在独立 NSObject 桥接类里处理 APNs/通知）。
-open class HybridAliPushPluginSpec_base: NSObject {
+open class HybridAliPushPluginSpec_base {
   private weak var cxxWrapper: HybridAliPushPluginSpec_cxx? = nil
   public init() { }
   public func getCxxWrapper() -> HybridAliPushPluginSpec_cxx {

@@ -183,20 +183,30 @@ class HybridAliPushPlugin : HybridAliPushPluginSpec() {
     }
   }
 
-  override fun listTags(target: Double): Promise<String> {
+  override fun listTags(target: Double): Promise<Array<String>> {
     return Promise.async {
       suspendCancellableCoroutine { cont ->
         PushServiceFactory.getCloudPushService()
           .listTags(
             target.toInt(),
             object : CommonCallback {
-              override fun onSuccess(response: String?) = cont.resume(response ?: "")
+              override fun onSuccess(response: String?) = cont.resume(splitCommaList(response))
               override fun onFailed(code: String?, message: String?) =
                 cont.resumeWithException(RuntimeException("listTags failed: $code $message"))
             },
           )
       }
     }
+  }
+
+  /** 服务端以逗号拼接返回标签 / 别名，统一拆分为数组（去空白、丢空项）。 */
+  private fun splitCommaList(response: String?): Array<String> {
+    if (response.isNullOrBlank()) return emptyArray()
+    return response
+      .split(",")
+      .map { it.trim() }
+      .filter { it.isNotEmpty() }
+      .toTypedArray()
   }
 
   // MARK: - 别名
