@@ -2,7 +2,9 @@
 
 阿里云移动推送（Alibaba Cloud Push）的 React Native 封装，基于 **Nitro Modules** 实现：
 
-- iOS 原生端：**Swift**（`HybridAliPushPlugin` 实现 Nitro 生成的 `HybridAliPushPluginSpec`）
+- iOS 原生端：**Swift**。Nitro 生成的 `HybridAliPushPluginSpec` 由 `HybridAliPushPlugin` 实现（纯 Swift，只对 JS）；
+  需要 NSObject 的 AppDelegate 集成（`@objc` 单例 / `UNUserNotificationCenterDelegate`）由独立的
+  `AliPushAppDelegate` 承担，两者通过 `AliPushEventBus` 单向解耦，codegen 不会覆盖手写代码
 - Android 原生端：**Kotlin**（`HybridAliPushPlugin` 继承 Nitro 生成的 `HybridAliPushPluginSpec`）
 - 原生桥接层由 `nitrogen` 代码生成器生成，无需手写 C++ / JNI / Objective-C
 - 推送事件通过 Nitro 回调（`addListener` 返回退订闭包）直接派发，不再依赖 `NativeEventEmitter`
@@ -75,7 +77,7 @@ iOS 端的推送初始化必须在原生层完成（`register()` 在 iOS 上是�
 import UIKit
 import UserNotifications
 // 本库模块名由 podspec 名 react-native-nitro-ali-push 推导为 react_native_nitro_ali_push。
-// HybridAliPushPlugin 是 public，跨模块使用需 import 本库模块（不在 NitroAliPush）。
+// AliPushAppDelegate 是 public，跨模块使用需 import 本库模块（不在 NitroAliPush）。
 import react_native_nitro_ali_push
 
 @main
@@ -86,7 +88,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     // ... 其他初始化（RCTBridge 等）...
 
     // 初始化阿里云推送
-    HybridAliPushPlugin.shared().setParams(
+    AliPushAppDelegate.shared().setParams(
       "<appKey>",
       appSecret: "<appSecret>",
       lauchOptions: launchOptions as? [AnyHashable: Any],
@@ -99,13 +101,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
   // 注册 deviceToken
   func application(_ application: UIApplication,
                   didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
-    HybridAliPushPlugin.shared().application(application,
+    AliPushAppDelegate.shared().application(application,
       didRegisterForRemoteNotificationsWithDeviceToken: deviceToken)
   }
 
   func application(_ application: UIApplication,
                   didFailToRegisterForRemoteNotificationsWithError error: Error) {
-    HybridAliPushPlugin.shared().application(application,
+    AliPushAppDelegate.shared().application(application,
       didFailToRegisterForRemoteNotificationsWithError: error)
   }
 
@@ -113,12 +115,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
   func application(_ application: UIApplication,
                   didReceiveRemoteNotification userInfo: [AnyHashable: Any],
                   fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
-    HybridAliPushPlugin.shared().application(application,
+    AliPushAppDelegate.shared().application(application,
       didReceiveRemoteNotification: userInfo,
       fetchCompletionHandler: completionHandler)
   }
 }
 ```
+
+> `AliPushAppDelegate` 是本库为 iOS 提供的 AppDelegate 集成桥（独立 NSObject 类，同时充当
+> `UNUserNotificationCenterDelegate`）。它与 Nitro 的 `HybridAliPushPlugin` 分离，因此重新
+> 执行 `nitrogen` codegen 不会影响 AppDelegate 的集成代码。
 
 > 若 CocoaPods 编译时提示找不到 `React` / `CloudPushSDK` 模块，请在 Podfile 中开启 `use_frameworks!` 或 `use_modular_headers!`。
 
@@ -296,7 +302,7 @@ const badge = await AliPush.getApplicationIconBadgeNumber();
 
 | 方法 | 说明 | 平台差异 |
 | --- | --- | --- |
-| `register()` | 注册阿里云通道 + 所有已配置的厂商通道 | Android 必需，建议**在用户同意隐私后**调用。appKey / appSecret 由 manifest（或宿主 `init`）决定，不作为本方法参数。iOS 为无操作（在 AppDelegate 用 `setParams` 初始化） |
+| `register()` | 注册阿里云通道 + 所有已配置的厂商通道 | Android 必需，建议**在用户同意隐私后**调用。appKey / appSecret 由 manifest（或宿主 `init`）决定，不作为本方法参数。iOS 为无操作（在 AppDelegate 用 `AliPushAppDelegate.shared().setParams` 初始化） |
 
 | `getDeviceId()` | 获取设备 `deviceId` | — |
 | `bindAccount(account)` | 绑定账号 | — |
