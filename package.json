@@ -1,6 +1,6 @@
 {
   "name": "react-native-nitro-ali-push",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "React Native wrapper for Alibaba Cloud Push (阿里云移动推送), built with Nitro Modules (swift/kotlin HybridObject).",
   "main": "lib/index.js",
   "module": "lib/index.js",
