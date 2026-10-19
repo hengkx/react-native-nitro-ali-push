@@ -147,6 +147,53 @@ import AliPush from 'react-native-nitro-ali-push';
 await AliPush.initPush('<appKey>', '<appSecret>');
 ```
 
+### 3. 厂商通道（华为 / 小米 / OPPO / vivo / 魅族 / 荣耀）
+
+本库的 `android/build.gradle` 已经 `api` 引入了辅助通道依赖：
+
+```gradle
+api 'com.aliyun.ams:alicloud-android-third-push:3.10.1'
+api 'com.aliyun.ams:alicloud-android-third-push-huawei:3.10.1'
+api 'com.aliyun.ams:alicloud-android-third-push-xiaomi:3.10.1'
+api 'com.aliyun.ams:alicloud-android-third-push-oppo:3.10.1'
+api 'com.aliyun.ams:alicloud-android-third-push-vivo:3.10.1'
+api 'com.aliyun.ams:alicloud-android-third-push-meizu:3.10.1'
+api 'com.aliyun.ams:alicloud-android-third-push-honor:3.10.1'
+```
+
+这些依赖**不需要在代码里逐个调用注册 API**。机制是：`initPush` 内部的 `PushServiceFactory.init()` 会触发 SDK 的 `ChannelManager` 扫描上述各厂商 `IPushService` 实现，对每个厂商判断是否**同时满足**以下三点，满足才真正注册该通道：
+
+1. 对应的 `third-push-*` 模块在 classpath（即上面的依赖，已具备）；
+2. 宿主 `AndroidManifest.xml` 里配了**该厂商的 appId / appKey** meta-data；
+3. 厂商**自家的推送 SDK** 也在工程里（这些 `third-push` 模块只做桥接，不打包厂商 SDK）。
+
+因此"注册"是**配置驱动**的。每个厂商需要你在宿主工程里补两件事：引入厂商自己的 SDK + 在 `AndroidManifest.xml` 填阿里云约定的 meta-data（注意 key 是阿里云这套，不是厂商原生那套）。
+
+| 厂商 | 需额外引入的厂商 SDK | `AndroidManifest.xml` meta-data |
+| --- | --- | --- |
+| 华为 | `com.huawei.hms:push` + 根目录 `agconnect-services.json` | `com.huawei.hms.client.appid` = `appid=xxxxxxx` |
+| 荣耀 | honor push SDK（`com.hihonor.mcs:push` 等） | `com.hihonor.push.app_id` = `xxxxxxx` |
+| 小米 | 小米推送 SDK | `MIPUSH_APPID` / `MIPUSH_APPKEY` |
+| OPPO | OPPO Push SDK | `OPPOPUSH_APPKEY` / `OPPOPUSH_APPSECRET` |
+| vivo | vivo Push SDK | `VIVOPUSH_APPID` / `VIVOPUSH_APPKEY` |
+| 魅族 | 魅族推送 SDK | `MEIZU_PUSH_APPID` / `MEIZU_PUSH_APPKEY` |
+
+> 每台设备只会启用与自身品牌匹配的通道；其余厂商即使配了 meta-data 也会在对应品牌机型上被跳过（默认行为），不会报错。
+
+各厂商通常还要求在 manifest 里声明自己的 `<service>` / `<receiver>` / 权限（按厂商官方文档补齐）。
+
+**验证是否注册成功**：监听 `AliPushMessageReceiver.onChannelRegistration` 的日志（`onChannelRegistration: <errorCode>`）。errorCode 为 `0` 表示该厂商通道注册成功；非 `0` 通常是该厂商的 appId/appKey 或厂商 SDK 没配齐。
+
+**厂商通道通知点击**：走厂商系统通道下发的通知**不**经过阿里云的 `MessageReceiver`，而是通过厂商自己的点击 intent 拉起 App。本库提供了 `ThirdPartMessageActivity` 做中转（拉起后 `dispatchFromIntent` 把数据派发到 JS 的 `aliyunPushReceived`）。宿主需要在 `AndroidManifest.xml` 给该 Activity 配置对应厂商要求的 `intent-filter`（scheme / action），否则厂商通知点击可能打不开 App 或拿不到数据：
+
+```xml
+<activity
+    android:name="com.margelo.nitro.alipush.ThirdPartMessageActivity"
+    android:exported="true">
+    <!-- 按各厂商文档填入 intent-filter -->
+</activity>
+```
+
 ---
 
 ## 用法
