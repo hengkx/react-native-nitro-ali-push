@@ -69,7 +69,7 @@ podspec 检测到该文件后会自动改用 `vendored_frameworks`，不再依�
 
 ### 2. AppDelegate 中初始化
 
-iOS 端的推送初始化必须在原生层完成（不能在 JS 中 `initPush`）：
+iOS 端的推送初始化必须在原生层完成（`register()` 在 iOS 上是无操作）：
 
 ```swift
 import UIKit
@@ -137,28 +137,28 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 </application>
 ```
 
-### 2. 初始化（分两步）
+### 2. 注册（分两步，宿主零原生代码）
 
-按阿里云官方要求，初始化拆成两个阶段，本库已把第一阶段做成自动的：
+按阿里云官方要求，整个过程拆成两个阶段：
 
 | 阶段 | 做什么 | 何时发生 | 是否采集隐私 |
 | --- | --- | --- | --- |
-| ① 加载框架（官方「2.1 初始化」） | `PushServiceFactory.init(context)` —— 加载推送框架、初始化参数，**不启动推送逻辑** | 本库 `AliPushInitProvider` 自动完成，其 `onCreate` 早于 `Application.onCreate`，**宿主无需写任何原生代码** | 否 |
-| ② 注册设备 | `CloudPushService.register(...)` —— 真正启动推送 | 你在 JS 里调用 `initPush` 时 | 是 |
+| ① 加载框架（官方「2.1 初始化」） | `PushServiceFactory.init(context)` —— 加载推送框架、初始化参数，**不启动推送逻辑** | 本库 `AliPushInitProvider` 自动完成，其 `onCreate` 早于 `Application.onCreate` | 否 |
+| ② 注册通道 | `CloudPushService.register(...)` + 各厂商 `XxxRegister.register(...)` | 你在 JS 里调用 `AliPush.register()` 时 | 是 |
 
-因此在 JS 里只需做第 ② 步，且**建议在用户同意隐私政策之后再调用**：
+因此 JS 里只需做第 ② 步，**建议放在用户同意隐私政策之后**：
 
 ```ts
 import AliPush from 'react-native-nitro-ali-push';
 
 // 代码方式
-await AliPush.initPush('<appKey>', '<appSecret>');
+await AliPush.register('<appKey>', '<appSecret>');
 
 // manifest 方式（AndroidManifest.xml 已配 appkey/appsecret）
-// await AliPush.initPush();
+await AliPush.register();
 ```
 
-> 注意：厂商通道（华为 / 小米 / OPPO / vivo / 魅族 / 荣耀）**不由 `initPush` 注册**，需要在宿主工程的原生层自行调用各厂商 `Register`。见下面「3. 厂商通道」。
+`register()` 会**一次性**注册阿里云通道**以及** `AndroidManifest.xml` 里配置了参数的全部厂商通道（华为 / 荣耀 / vivo / 小米 / OPPO / 魅族），未配置的厂商自动跳过，无需宿主写任何原生代码。
 
 ### 3. 厂商通道（华为 / 小米 / OPPO / vivo / 魅族 / 荣耀）
 
@@ -178,7 +178,7 @@ api 'com.aliyun.ams:alicloud-android-third-push-honor:3.10.1'
 
 #### meta-data 写入示例
 
-只有**华为 / 荣耀 / vivo**这三家的 appId 是由厂商自己的 SDK 从 manifest / `agconnect-services.json` 读取的，必须按下表写入 `AndroidManifest.xml` 的 `<application>` 节点内：
+把用到的厂商配置写入 `AndroidManifest.xml` 的 `<application>` 节点内即可，**配了哪些厂商，`register()` 就注册哪些**：
 
 ```xml
 <!-- 华为：需额外放 agconnect-services.json 到工程根目录 -->
@@ -191,56 +191,44 @@ api 'com.aliyun.ams:alicloud-android-third-push-honor:3.10.1'
   android:name="com.hihonor.push.app_id"
   android:value="YOUR_HIHONOR_APP_ID" />
 
-<!-- vivo：由 vivo 自身 SDK 读取 -->
+<!-- vivo -->
 <meta-data android:name="com.vivo.push.app_id" android:value="YOUR_VIVO_APP_ID" />
 <meta-data android:name="com.vivo.push.api_key" android:value="YOUR_VIVO_API_KEY" />
+
+<!-- 小米 -->
+<meta-data android:name="com.xiaomi.push.id"  android:value="id=YOUR_XIAOMI_APP_ID" />
+<meta-data android:name="com.xiaomi.push.key" android:value="id=YOUR_XIAOMI_APP_KEY" />
+
+<!-- OPPO -->
+<meta-data android:name="com.oppo.push.key"    android:value="id=YOUR_OPPO_KEY" />
+<meta-data android:name="com.oppo.push.secret" android:value="id=YOUR_OPPO_SECRET" />
+
+<!-- 魅族 -->
+<meta-data android:name="com.meizu.push.id"  android:value="id=YOUR_MEIZU_APP_ID" />
+<meta-data android:name="com.meizu.push.key" android:value="id=YOUR_MEIZU_APP_KEY" />
 ```
 
-> 小米 / OPPO / 魅族**不需要**写这些 meta-data——它们的 appId/appKey 是你调用 `register(...)` 时直接传参的（见下）。若你选择把值存在 manifest 再自己读出来传参，注意纯数字会被 manifest 合并转成科学计数法（`123456789` → `1.23456789E8`），建议加 `id=` 前缀并在读取时去掉。
+> 小米 / OPPO / 魅族的值建议加 **`id=` 前缀**：纯数字在 manifest 合并时可能被转成科学计数法（`123456789` → `1.23456789E8`）。本库读取时会自动去掉该前缀。
+> 华为 / 荣耀 / vivo 的 appId 由**厂商自己的 SDK** 读取，本库不解析它们的值。
 
-#### 注册方式：必须在宿主原生层自己调
+#### 注册方式：`register()` 自动完成
 
-**本库不提供厂商通道注册 API，`initPush` 也不会触发任何 `XxxRegister`。** 你必须自己在宿主工程的原生层（`MainApplication.onCreate`，且在 `PushServiceFactory.init(context)` **之后**）调用各厂商 `Register`。
+调用 `AliPush.register()` 时，本库会在阿里云通道注册成功后，按上表配置的厂商逐个调用对应的 `XxxRegister`：
 
-| 厂商 | Register 类 | 调用方式 | appId / appKey 从哪来 |
-| --- | --- | --- | --- |
-| 华为 | `com.alibaba.sdk.android.push.huawei.HuaWeiRegister` | `register(application)` | HMS 自己读 `agconnect-services.json` + manifest |
-| 荣耀 | `com.alibaba.sdk.android.push.HonorRegister` | `register(application)` | 荣耀 SDK 读 manifest `com.hihonor.push.app_id` |
-| vivo | `com.alibaba.sdk.android.push.register.VivoRegister` | `register(context)` | vivo SDK 读 manifest `com.vivo.push.app_id` / `api_key` |
-| 小米 | `com.alibaba.sdk.android.push.register.MiPushRegister` | `register(context, appId, appKey)` | **你自己传参** |
-| OPPO | `com.alibaba.sdk.android.push.register.OppoRegister` | `register(context, appKey, appSecret)` | **你自己传参** |
-| 魅族 | `com.alibaba.sdk.android.push.register.MeizuRegister` | `register(context, appId, appKey)` | **你自己传参** |
+| 厂商 | 本库调用 | appId / appKey 来源 |
+| --- | --- | --- |
+| 华为 | `HuaWeiRegister.register(application)` | HMS 自己读 `agconnect-services.json` + manifest |
+| 荣耀 | `HonorRegister.register(application)` | 荣耀 SDK 读 manifest `com.hihonor.push.app_id` |
+| vivo | `VivoRegister.register(context)` | vivo SDK 读 manifest `com.vivo.push.app_id` / `api_key` |
+| 小米 | `MiPushRegister.register(context, appId, appKey)` | 本库读 manifest `com.xiaomi.push.id` / `key` |
+| OPPO | `OppoRegister.register(context, appKey, appSecret)` | 本库读 manifest `com.oppo.push.key` / `secret` |
+| 魅族 | `MeizuRegister.register(context, appId, appKey)` | 本库读 manifest `com.meizu.push.id` / `key` |
 
-> 已实证：反编译 `alicloud-android-third-push:3.9.x` 全部模块，`com.xiaomi.push.id` / `com.oppo.push.key` / `com.meizu.push.id` 这些字符串在 SDK 里**搜不到**——阿里云 SDK 不会替你读它们。因此小米 / OPPO / 魅族这三家**必须由你显式传参**。若仍想用 manifest 存这些值，需自己用 `PackageManager.getApplicationInfo(...).metaData` 读出来再传给 `register`。
+> 已实证：反编译 `alicloud-android-third-push:3.9.x` 全部模块，`com.xiaomi.push.id` / `com.oppo.push.key` / `com.meizu.push.id` 在 SDK 里**搜不到**——阿里云不会替你读它们。所以这三家由**本库**从 manifest 读出后传参，你只要把值写进 manifest 即可。
 
-Kotlin 示例（`MainApplication.kt`）：
-
-```kotlin
-override fun onCreate() {
-  super.onCreate()
-  // 官方 2.1：此阶段只初始化推送参数，不启动推送逻辑
-  PushServiceFactory.init(this)
-  registerVendors()
-}
-
-private fun registerVendors() {
-  val app = this
-
-  // 华为 / 荣耀：需传 Application，appId 由厂商 SDK 自行读取
-  com.alibaba.sdk.android.push.huawei.HuaWeiRegister.register(app)
-  com.alibaba.sdk.android.push.HonorRegister.register(app)
-
-  // vivo：无需传 appId，vivo SDK 自己读 manifest
-  com.alibaba.sdk.android.push.register.VivoRegister.register(app)
-
-  // 小米 / OPPO / 魅族：必须显式传 appId / appKey
-  com.alibaba.sdk.android.push.register.MiPushRegister.register(app, MI_APP_ID, MI_APP_KEY)
-  com.alibaba.sdk.android.push.register.OppoRegister.register(app, OPPO_KEY, OPPO_SECRET)
-  com.alibaba.sdk.android.push.register.MeizuRegister.register(app, MEIZU_APP_ID, MEIZU_APP_KEY)
-}
-```
-
-> 每个 `register` 内部都做了品牌判断，非本品牌设备会直接跳过，所以可以全部调用、不必自己判机型。若你没引入某个厂商的 `third-push-*` 模块，把对应那行删掉即可（否则编译报找不到类）。
+- 每个 `XxxRegister` 内部都做了品牌判断，非本品牌设备直接跳过，无需自己判机型。
+- 某家厂商没配 meta-data → 自动跳过该项，不影响其他厂商与阿里云通道。
+- 华为还需把 `agconnect-services.json` 放到工程根目录并引入 `com.huawei.hms:push`。
 
 **验证是否注册成功**：监听 `AliPushMessageReceiver.onChannelRegistration` 的日志（`onChannelRegistration: <errorCode>`）。errorCode 为 `0` 表示该厂商通道注册成功；非 `0` 通常是 appId/appKey 或厂商 SDK 没配齐。
 
@@ -307,7 +295,7 @@ const badge = await AliPush.getApplicationIconBadgeNumber();
 
 | 方法 | 说明 | 平台差异 |
 | --- | --- | --- |
-| `initPush(appKey?, appSecret?)` | 注册设备、启动推送 | Android 必需，建议**在用户同意隐私后**调用；`appKey` / `appSecret` 都省略时走 manifest 配置。iOS 为无操作（在 AppDelegate 用 `setParams` 初始化）。框架加载由本库自动完成，不在本方法内 |
+| `register(appKey?, appSecret?)` | 注册阿里云通道 + 所有已配置的厂商通道 | Android 必需，建议**在用户同意隐私后**调用；`appKey` / `appSecret` 都省略时走 manifest 配置。iOS 为无操作（在 AppDelegate 用 `setParams` 初始化）。框架加载由本库自动完成 |
 
 | `getDeviceId()` | 获取设备 `deviceId` | — |
 | `bindAccount(account)` | 绑定账号 | — |

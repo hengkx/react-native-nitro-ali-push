@@ -15,8 +15,8 @@ import com.alibaba.sdk.android.push.noonesdk.PushServiceFactory
  * `ContentProvider.onCreate()` 由系统在 `Application.attachBaseContext` 之后、
  * `Application.onCreate` **之前**回调，因此本库无需宿主写任何原生代码即可满足该时序要求。
  *
- * 真正涉及设备标识采集的 `register(...)` 不在这里调用 —— 由 JS 侧在用户同意隐私后显式
- * 调用 `initPush` 触发（见 `HybridAliPushPlugin.initPush`）。
+ * 真正涉及设备标识采集的 `register(...)`（阿里云通道 + 各厂商通道）不在这里调用 ——
+ * 由 JS 侧在用户同意隐私后调用 `register` 触发（见 `HybridAliPushPlugin.register`）。
  */
 class AliPushInitProvider : ContentProvider() {
   override fun onCreate(): Boolean {
@@ -26,7 +26,7 @@ class AliPushInitProvider : ContentProvider() {
       PushServiceFactory.init(context.applicationContext)
       true
     } catch (_: Throwable) {
-      // 初始化失败不应导致 App 启动崩溃，交由后续 initPush 报错。
+      // 初始化失败不应导致 App 启动崩溃，交由后续 register 报错。
       false
     }
   }

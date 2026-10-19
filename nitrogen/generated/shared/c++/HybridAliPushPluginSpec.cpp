@@ -14,7 +14,7 @@ namespace margelo::nitro::alipush {
     HybridObject::loadHybridMethods();
     // load custom methods/properties
     registerHybrids(this, [](Prototype& prototype) {
-      prototype.registerHybridMethod("initPush", &HybridAliPushPluginSpec::initPush);
+      prototype.registerHybridMethod("register", &HybridAliPushPluginSpec::register);
       prototype.registerHybridMethod("getDeviceId", &HybridAliPushPluginSpec::getDeviceId);
       prototype.registerHybridMethod("bindAccount", &HybridAliPushPluginSpec::bindAccount);
       prototype.registerHybridMethod("unbindAccount", &HybridAliPushPluginSpec::unbindAccount);

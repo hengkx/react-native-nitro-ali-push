@@ -23,15 +23,18 @@ import type { AliPushEvent, AliPushMessage, AliPushTagTarget } from './types';
 const AliPushNative = NitroModules.createHybridObject<AliPushPlugin>('AliPushPlugin');
 
 /**
- * 向阿里云推送服务注册应用（启动推送逻辑）。
+ * 注册推送：注册阿里云推送通道，**并注册 manifest 中配置了参数的所有厂商通道**
+ * （华为 / 荣耀 / vivo / 小米 / OPPO / 魅族）。
  *
  * @remarks
- * **Android**：调用 SDK 的 `register(...)` 完成设备注册，这是真正开始推送、并采集
- * 设备标识的一步，因此**请在获得用户隐私授权后再调用**。
+ * **Android**：先完成阿里云通道注册，再逐个调用各厂商 `XxxRegister`。厂商的 appId /
+ * appKey 全部从 `AndroidManifest.xml` 的 meta-data 读取（见 README 第 3 节），
+ * 未配置的厂商会被自动跳过，因此**无需宿主写任何原生代码**。
  *
- * SDK 框架的加载（`PushServiceFactory.init`，按官方「2.1 初始化」要求须在
- * `Application.onCreate` 之前完成）由本库的 `AliPushInitProvider` 自动完成，
- * **无需宿主写任何原生代码**，且该阶段不采集隐私。
+ * SDK 框架加载（`PushServiceFactory.init`，官方「2.1 初始化」要求须在
+ * `Application.onCreate` 之前完成）由本库 `AliPushInitProvider` 自动完成。
+ *
+ * 本方法会采集设备标识，**请在用户同意隐私政策之后再调用**。
  *
  * @param appKey - 阿里云推送控制台分配的 AppKey。省略则走 manifest 配置方式。
  * @param appSecret - 阿里云推送控制台分配的 AppSecret。省略则走 manifest 配置方式。
@@ -40,14 +43,14 @@ const AliPushNative = NitroModules.createHybridObject<AliPushPlugin>('AliPushPlu
  * @example
  * ```ts
  * // 代码方式
- * await AliPush.initPush('your_app_key', 'your_app_secret');
+ * await AliPush.register('your_app_key', 'your_app_secret');
  *
  * // manifest 方式（AndroidManifest.xml 已配 appkey/appsecret）
- * await AliPush.initPush();
+ * await AliPush.register();
  * ```
  */
-export function initPush(appKey?: string, appSecret?: string): Promise<void> {
-  return AliPushNative.initPush(appKey, appSecret);
+export function register(appKey?: string, appSecret?: string): Promise<void> {
+  return AliPushNative.register(appKey, appSecret);
 }
 
 /**
@@ -262,7 +265,7 @@ export function removeEventListener(unsubscribe: () => void): void {
  * @public
  */
 const AliPush = {
-  initPush,
+  register,
   getDeviceId,
   bindAccount,
   unbindAccount,

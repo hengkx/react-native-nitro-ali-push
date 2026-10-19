@@ -125,9 +125,9 @@ open class HybridAliPushPluginSpec_cxx {
 
   // Methods
   @inline(__always)
-  public final func initPush(appKey: bridge.std__optional_std__string_, appSecret: bridge.std__optional_std__string_) -> bridge.Result_std__shared_ptr_Promise_void___ {
+  public final func register(appKey: bridge.std__optional_std__string_, appSecret: bridge.std__optional_std__string_) -> bridge.Result_std__shared_ptr_Promise_void___ {
     do {
-      let __result = try self.__implementation.initPush(appKey: { () -> String? in
+      let __result = try self.__implementation.register(appKey: { () -> String? in
         if bridge.has_value_std__optional_std__string_(appKey) {
           let __unwrapped = bridge.get_std__optional_std__string_(appKey)
           return String(__unwrapped)

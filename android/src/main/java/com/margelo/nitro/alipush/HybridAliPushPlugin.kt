@@ -3,9 +3,16 @@ package com.margelo.nitro.alipush
 import android.app.Application
 import android.app.NotificationManager
 import android.content.Context
+import android.content.pm.PackageManager
 import android.os.Build
 import com.alibaba.sdk.android.push.CommonCallback
+import com.alibaba.sdk.android.push.HonorRegister
+import com.alibaba.sdk.android.push.huawei.HuaWeiRegister
 import com.alibaba.sdk.android.push.noonesdk.PushServiceFactory
+import com.alibaba.sdk.android.push.register.MeizuRegister
+import com.alibaba.sdk.android.push.register.MiPushRegister
+import com.alibaba.sdk.android.push.register.OppoRegister
+import com.alibaba.sdk.android.push.register.VivoRegister
 import com.margelo.nitro.core.NullType
 import com.margelo.nitro.core.Promise
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -66,31 +73,95 @@ class HybridAliPushPlugin : HybridAliPushPluginSpec() {
 
   // MARK: - 初始化 / 设备号
 
-  override fun initPush(appKey: String?, appSecret: String?): Promise<Unit> {
+  override fun register(appKey: String?, appSecret: String?): Promise<Unit> {
     return Promise.async {
       suspendCancellableCoroutine { cont ->
         try {
           val applicationContext = appContext()
           // PushServiceFactory.init 已由 AliPushInitProvider 在 Application.onCreate 之前完成。
-          // 此处只触发 register（涉及设备标识采集，等用户同意隐私后再调用）。
           val service = PushServiceFactory.getCloudPushService()
+          val callback = object : CommonCallback {
+            override fun onSuccess(response: String?) {
+              // 阿里云通道注册成功后，再注册 manifest 里配置了参数的厂商通道。
+              registerVendorChannels()
+              cont.resume(Unit)
+            }
+            override fun onFailed(errorCode: String?, errorMessage: String?) =
+              cont.resumeWithException(RuntimeException("register failed: $errorCode $errorMessage"))
+          }
           if (appKey != null && appSecret != null) {
-            service.register(applicationContext, appKey, appSecret, object : CommonCallback {
-              override fun onSuccess(response: String?) = cont.resume(Unit)
-              override fun onFailed(errorCode: String?, errorMessage: String?) =
-                cont.resumeWithException(RuntimeException("initPush failed: $errorCode $errorMessage"))
-            })
+            service.register(applicationContext, appKey, appSecret, callback)
           } else {
-            service.register(applicationContext, object : CommonCallback {
-              override fun onSuccess(response: String?) = cont.resume(Unit)
-              override fun onFailed(errorCode: String?, errorMessage: String?) =
-                cont.resumeWithException(RuntimeException("initPush failed: $errorCode $errorMessage"))
-            })
+            service.register(applicationContext, callback)
           }
         } catch (e: Throwable) {
           cont.resumeWithException(e)
         }
       }
+    }
+  }
+
+  /**
+   * 逐个注册各厂商通道。
+   *
+   * 每个 `XxxRegister.register` 内部都做了品牌判断，非本品牌设备会直接跳过，因此这里无需
+   * 自己判机型。华为 / 荣耀 / vivo 不需要 appId（由厂商 SDK 自行读取 manifest 或
+   * agconnect-services.json）；小米 / OPPO / 魅族必须传参，从 manifest meta-data 读取。
+   * 单家厂商缺失配置或抛异常都不影响其他厂商与主流程。
+   */
+  private fun registerVendorChannels() {
+    val ctx = appContext()
+    val app = ctx.applicationContext as? Application
+
+    // 华为 / 荣耀：需要 Application，appId 由厂商 SDK 自己读
+    if (app != null) {
+      runCatching { HuaWeiRegister.register(app) }
+      runCatching { HonorRegister.register(app) }
+    }
+
+    // vivo：无参，由 vivo SDK 读 manifest
+    runCatching { VivoRegister.register(ctx) }
+
+    // 小米 / OPPO / 魅族：需显式传参，从 manifest meta-data 读取
+    val miId = manifestMeta(ctx, "com.xiaomi.push.id")
+    val miKey = manifestMeta(ctx, "com.xiaomi.push.key")
+    if (miId != null && miKey != null) {
+      runCatching { MiPushRegister.register(ctx, miId, miKey) }
+    }
+
+    val oppoKey = manifestMeta(ctx, "com.oppo.push.key")
+    val oppoSecret = manifestMeta(ctx, "com.oppo.push.secret")
+    if (oppoKey != null && oppoSecret != null) {
+      runCatching { OppoRegister.register(ctx, oppoKey, oppoSecret) }
+    }
+
+    val meizuId = manifestMeta(ctx, "com.meizu.push.id")
+    val meizuKey = manifestMeta(ctx, "com.meizu.push.key")
+    if (meizuId != null && meizuKey != null) {
+      runCatching { MeizuRegister.register(ctx, meizuId, meizuKey) }
+    }
+  }
+
+  /**
+   * 读取宿主 `AndroidManifest.xml` 中 `<application>` 下的 meta-data。
+   *
+   * 纯数字在 manifest 合并时可能被转成科学计数法，故官方推荐加 `id=` 前缀，这里一并去掉。
+   */
+  private fun manifestMeta(context: Context, key: String): String? {
+    return try {
+      val appInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        context.packageManager.getApplicationInfo(
+          context.packageName,
+          PackageManager.ApplicationInfoFlags.of(PackageManager.GET_META_DATA.toLong()),
+        )
+      } else {
+        @Suppress("DEPRECATION")
+        context.packageManager.getApplicationInfo(context.packageName, PackageManager.GET_META_DATA)
+      }
+      val raw = appInfo.metaData?.getString(key) ?: return null
+      raw.trim().removePrefix("id=").trim().takeIf { it.isNotEmpty() }
+    } catch (_: Throwable) {
+      null
     }
   }
 

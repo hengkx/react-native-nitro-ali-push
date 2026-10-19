@@ -23,7 +23,7 @@ private func DLog(_ message: String, file: String = #file, line: UInt = #line) {
  * `CloudPushSDK` 回调以及事件分发都在本类完成。
  *
  * iOS 端的推送初始化必须在原生层完成（AppDelegate 调用 `shared.setParams`）；Android
- * 端同样由宿主在原生层初始化（本库不再提供 JS 的 `initPush`）。
+ * 端框架加载由 `AliPushInitProvider` 自动完成，注册由 JS 调用 `register` 触发。
  */
 /// 必须 `public`：本库作为 pod 是独立模块，App 的 Swift/ObjC 需要引用它。
 /// 仅 `internal` 时不会写进 `<react_native_nitro_ali_push-Swift.h>`，App 端编译报
@@ -312,8 +312,8 @@ public final class HybridAliPushPlugin: HybridAliPushPluginSpec, UNUserNotificat
 
   // MARK: - 暴露给 JS 的方法
 
-  public func initPush(appKey: String?, appSecret: String?) throws -> Promise<Void> {
-    // iOS 端初始化在 AppDelegate 中通过 shared.setParams 完成，这里不做任何事。
+  public func register(appKey: String?, appSecret: String?) throws -> Promise<Void> {
+    // iOS 端初始化与注册都在 AppDelegate 中通过 shared.setParams 完成，这里不做任何事。
     return Promise.resolved()
   }
 

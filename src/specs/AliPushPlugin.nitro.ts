@@ -33,16 +33,18 @@ export type AliPushListener = (message: AliPushMessage) => void;
 export interface AliPushPlugin
   extends HybridObject<{ ios: 'swift'; android: 'kotlin' }> {
   /**
-   * 向阿里云推送服务注册应用（启动推送逻辑）。
+   * 注册推送：注册阿里云推送通道，**并注册 `AndroidManifest.xml` 中配置的所有厂商通道**
+   * （华为 / 荣耀 / vivo / 小米 / OPPO / 魅族）。
    *
-   * - **Android**：调用 SDK 的 `register(...)`。两个参数都传 = 代码方式；都省略
-   *   = 使用 `AndroidManifest.xml` 中 `com.alibaba.app.appkey` / `com.alibaba.app.appsecret`。
-   *   SDK 框架加载（`PushServiceFactory.init`）由本库的 `AliPushInitProvider` 在
-   *   `Application.onCreate` 之前完成，**此方法不涉及隐私采集**——但请在获得用户
-   *   隐私授权后再调用 `initPush`，以免违规。
+   * - **Android**：先 `CloudPushService.register(...)`，再逐个调用各厂商 `XxxRegister`。
+   *   `appKey` / `appSecret` 都传 = 代码方式；都省略 = 读 `AndroidManifest.xml` 中的
+   *   `com.alibaba.app.appkey` / `com.alibaba.app.appsecret`。
+   *   厂商通道的 appId / appKey 一律从 manifest 读取（见 README 第 3 节），未配置的厂商自动跳过。
+   *   SDK 框架加载（`PushServiceFactory.init`）由本库 `AliPushInitProvider` 在
+   *   `Application.onCreate` 之前完成。**本方法会采集设备标识** —— 请在用户同意隐私后调用。
    * - **iOS**：无操作（iOS 端初始化在原生 `AppDelegate` 中通过 `setParams` 完成）。
    */
-  initPush(appKey?: string, appSecret?: string): Promise<void>;
+  register(appKey?: string, appSecret?: string): Promise<void>;
 
   /** 获取设备唯一标识 `deviceId`。 */
   getDeviceId(): Promise<string>;

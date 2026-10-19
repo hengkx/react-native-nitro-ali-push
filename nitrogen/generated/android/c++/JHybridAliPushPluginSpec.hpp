@@ -54,7 +54,7 @@ namespace margelo::nitro::alipush {
 
   public:
     // Methods
-    std::shared_ptr<Promise<void>> initPush(const std::optional<std::string>& appKey, const std::optional<std::string>& appSecret) override;
+    std::shared_ptr<Promise<void>> register(const std::optional<std::string>& appKey, const std::optional<std::string>& appSecret) override;
     std::shared_ptr<Promise<std::string>> getDeviceId() override;
     std::shared_ptr<Promise<void>> bindAccount(const std::string& account) override;
     std::shared_ptr<Promise<void>> unbindAccount() override;
