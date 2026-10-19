@@ -37,7 +37,7 @@ final class HybridAliPushPlugin: HybridAliPushPluginSpec {
     return Promise.async {
       try await withCheckedThrowingContinuation { continuation in
         CloudPushSDK.bindAccount(account, withCallback: { res in
-          if let res = res, res.success {
+          if res.success {
             continuation.resume()
           } else {
             continuation.resume(throwing: RuntimeError.error(
@@ -52,7 +52,7 @@ final class HybridAliPushPlugin: HybridAliPushPluginSpec {
     return Promise.async {
       try await withCheckedThrowingContinuation { continuation in
         CloudPushSDK.unbindAccount({ res in
-          if let res = res, res.success {
+          if res.success {
             continuation.resume()
           } else {
             continuation.resume(throwing: RuntimeError.error(
@@ -68,7 +68,7 @@ final class HybridAliPushPlugin: HybridAliPushPluginSpec {
     return Promise.async {
       try await withCheckedThrowingContinuation { continuation in
         CloudPushSDK.bindTag(Int32(target), withTags: tags, withAlias: aliasString, withCallback: { res in
-          if let res = res, res.success {
+          if res.success {
             continuation.resume()
           } else {
             continuation.resume(throwing: RuntimeError.error(
@@ -84,7 +84,7 @@ final class HybridAliPushPlugin: HybridAliPushPluginSpec {
     return Promise.async {
       try await withCheckedThrowingContinuation { continuation in
         CloudPushSDK.unbindTag(Int32(target), withTags: tags, withAlias: aliasString, withCallback: { res in
-          if let res = res, res.success {
+          if res.success {
             continuation.resume()
           } else {
             continuation.resume(throwing: RuntimeError.error(
@@ -99,7 +99,7 @@ final class HybridAliPushPlugin: HybridAliPushPluginSpec {
     return Promise.async {
       try await withCheckedThrowingContinuation { continuation in
         CloudPushSDK.listTags(Int32(target), withCallback: { res in
-          if let res = res, res.success {
+          if res.success {
             continuation.resume(returning: Self.splitCommaList(res.data as? String))
           } else {
             continuation.resume(throwing: RuntimeError.error(
@@ -114,7 +114,7 @@ final class HybridAliPushPlugin: HybridAliPushPluginSpec {
     return Promise.async {
       try await withCheckedThrowingContinuation { continuation in
         CloudPushSDK.addAlias(alias, withCallback: { res in
-          if let res = res, res.success {
+          if res.success {
             continuation.resume()
           } else {
             continuation.resume(throwing: RuntimeError.error(
@@ -129,7 +129,7 @@ final class HybridAliPushPlugin: HybridAliPushPluginSpec {
     return Promise.async {
       try await withCheckedThrowingContinuation { continuation in
         CloudPushSDK.removeAlias(alias, withCallback: { res in
-          if let res = res, res.success {
+          if res.success {
             continuation.resume()
           } else {
             continuation.resume(throwing: RuntimeError.error(
@@ -144,7 +144,7 @@ final class HybridAliPushPlugin: HybridAliPushPluginSpec {
     return Promise.async {
       try await withCheckedThrowingContinuation { continuation in
         CloudPushSDK.listAliases({ res in
-          if let res = res, res.success {
+          if res.success {
             continuation.resume(returning: Self.splitCommaList(res.data as? String))
           } else {
             continuation.resume(throwing: RuntimeError.error(
@@ -189,7 +189,7 @@ final class HybridAliPushPlugin: HybridAliPushPluginSpec {
 
   func syncBadgeNum(badge: Double) throws -> Promise<Void> {
     return Promise.async {
-      CloudPushSDK.syncBadgeNum(UInt(badge))
+      CloudPushSDK.syncBadgeNum(UInt(badge)) { _ in }
     }
   }
 

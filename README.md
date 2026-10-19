@@ -76,9 +76,10 @@ iOS 端的推送初始化必须在原生层完成（`register()` 在 iOS 上是�
 ```swift
 import UIKit
 import UserNotifications
-// 本库模块名由 podspec 名 react-native-nitro-ali-push 推导为 react_native_nitro_ali_push。
-// AliPushAppDelegate 是 public，跨模块使用需 import 本库模块（不在 NitroAliPush）。
-import react_native_nitro_ali_push
+// 本库 Swift 模块名由 podspec 的 `module_name` 决定（见 react-native-nitro-ali-push.podspec），
+// 与 nitro.json 的 `iosModuleName`（NitroAliPush）保持一致，以便生成 NitroAliPush-Swift.h
+// 供 C++ 桥接使用。AliPushAppDelegate 是 public，跨模块使用需 import 本库模块。
+import NitroAliPush
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
