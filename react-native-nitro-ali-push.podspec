@@ -17,7 +17,13 @@ Pod::Spec.new do |s|
   s.platforms    = { :ios => "13.0", :tvos => "13.0" }
   s.source       = { :git => "https://github.com/hengkx/react-native-nitro-ali-push.git", :tag => "v#{s.version}" }
 
-  s.source_files = "ios/**/*.{swift}"
+  s.source_files = "ios/**/*.{swift,h,mm}"
+
+  # 阿里云 SDK 隔离层（`AliPushSDKProxy`）：Swift 侧只通过此协议与 CloudPushSDK 通信，
+  # 不直接 import CloudPushSDK，从而阻断其 libc++ 头（cstddef 等）与 non-modular header
+  # 污染 Swift 的编译上下文。该头是纯 Foundation、不引用 CloudPushSDK.h，放进 umbrella 也不会
+  # 把阿里云头带进 Swift 编译单元。
+  s.public_header_files = "ios/AliPushSDKProxy.h"
   s.requires_arc = true
   s.swift_version = "5.0"
 
